@@ -43,7 +43,7 @@ export function Wheel({ chance, angle, spinning, fast, state }: { chance: number
   );
 }
 
-export function UpgradePage({ onBack }: { onBack: () => void }) {
+export function UpgradePage({ onBack, onContract }: { onBack: () => void; onContract?: () => void }) {
   const p = useProfile();
   const [sel, setSel] = useState<string[]>([]);
   const [coinsStr, setCoinsStr] = useState('');
@@ -95,8 +95,11 @@ export function UpgradePage({ onBack }: { onBack: () => void }) {
 
   return (
     <div>
-      <button className="back" onClick={onBack}>← Режимы</button>
-      <h1 style={{ fontSize: 24, marginBottom: 14 }}>Апгрейдер</h1>
+      <div className="page-tabs">
+        <button className="on">⬆️ Апгрейдер</button>
+        <button onClick={onContract}>📜 Контракты</button>
+      </div>
+      <span style={{ display: 'none' }} onClick={onBack} />
 
       <div className="upg-layout">
         <div className="glass upg-side">

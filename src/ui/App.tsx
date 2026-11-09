@@ -12,22 +12,24 @@ import { UpgradePage } from './pages/UpgradePage';
 import { ContractPage } from './pages/ContractPage';
 import { SettingsModal } from './components/SettingsModal';
 import { useNow } from './components/Countdown';
+import { Sidebar } from './components/Sidebar';
 
-type Tab = 'cases' | 'bonus' | 'games' | 'inv' | 'profile';
-const TABS: { id: Tab; ic: string; name: string }[] = [
-  { id: 'cases', ic: '📦', name: 'Кейсы' },
-  { id: 'bonus', ic: '🎁', name: 'Бонусы' },
-  { id: 'games', ic: '🎮', name: 'Режимы' },
+type Tab = 'inv' | 'cases' | 'battles' | 'upgrade' | 'bonus' | 'profile';
+const TABS: { id: Tab; ic: string; name: string; mob?: boolean }[] = [
   { id: 'inv', ic: '🎒', name: 'Инвентарь' },
-  { id: 'profile', ic: '👤', name: 'Профиль' },
+  { id: 'cases', ic: '📦', name: 'Кейсы', mob: true },
+  { id: 'battles', ic: '⚔️', name: 'Батлы', mob: true },
+  { id: 'upgrade', ic: '⬆️', name: 'Апгрейды', mob: true },
+  { id: 'bonus', ic: '🎁', name: 'Награды', mob: true },
 ];
 
-// Простой роутинг через hash: #/cases, #/case/<id>, #/bonus …
+// Простой роутинг через hash: #/cases, #/case/<id>, #/upgrade, #/contract …
 function parse(): { tab: Tab; caseId?: string; sub?: string } {
   const h = location.hash.replace(/^#\/?/, '').split('/');
   if (h[0] === 'case' && h[1]) return { tab: 'cases', caseId: h[1] };
-  if (h[0] === 'upgrade' || h[0] === 'contract') return { tab: 'games', sub: h[0] };
-  if (TABS.some((t) => t.id === h[0])) return { tab: h[0] as Tab };
+  if (h[0] === 'contract') return { tab: 'upgrade', sub: 'contract' };
+  if (h[0] === 'games') return { tab: 'upgrade' };
+  if (TABS.some((t) => t.id === h[0]) || h[0] === 'profile') return { tab: h[0] as Tab };
   return { tab: 'cases' };
 }
 
@@ -38,7 +40,7 @@ export function App() {
   const [route, setRoute] = useState(parse());
   const [settings, setSettings] = useState(false);
   useEffect(() => {
-    const f = () => setRoute(parse());
+    const f = () => { setRoute(parse()); window.scrollTo(0, 0); };
     addEventListener('hashchange', f);
     return () => removeEventListener('hashchange', f);
   }, []);
@@ -49,37 +51,54 @@ export function App() {
   const freeReady = now >= p.freeAt;
   const dailyReady = !game.dailyState().claimed;
   const c = route.caseId ? (route.caseId === 'free' ? FREE_CASE : caseById(route.caseId)) : undefined;
+  const invValue = p.inventory.reduce((s, i) => s + i.price, 0);
 
   return (
     <div className="app">
+      <div className="backdrop" aria-hidden />
       <header className="head">
-        <button className="logo" onClick={() => go('cases')}><span>🎰</span><span className="full"><b>Кейс</b>-Рояль</span></button>
+        <button className="logo" onClick={() => go('cases')}><span className="logo-ic">🎰</span><span className="full"><b>КЕЙС</b>-РОЯЛЬ</span></button>
+        <div className="head-quick">
+          <button className="qbtn" title="Бесплатный кейс" onClick={() => go('case/free')}>🎉{freeReady && <i className="qdot" />}</button>
+          <button className="qbtn" title="Ежедневная награда" onClick={() => go('bonus')}>📅{dailyReady && <i className="qdot" />}</button>
+        </div>
         <nav className="topnav">
           {TABS.map((t) => <button key={t.id} className={route.tab === t.id ? 'on' : ''} onClick={() => go(t.id)}>{t.name}</button>)}
         </nav>
         <div className="spacer" />
-        <div className="balance" title="Баланс"><i className="coin" />{fmt(p.balance)}</div>
-        <button className="iconbtn" onClick={() => setSettings(true)} aria-label="Настройки">⚙️</button>
+        <div className="head-icons">
+          <button className={`qbtn${route.sub === 'contract' ? ' on' : ''}`} title="Контракты" onClick={() => go('contract')}>📜</button>
+        </div>
+        <button className="bal inv" title="Стоимость инвентаря" onClick={() => go('inv')}><span className="bal-ic">🔫</span>{fmt(invValue)}</button>
+        <button className="bal" title="Баланс" onClick={() => go('bonus')}><i className="coin" />{fmt(p.balance)}</button>
+        <button className="plus" title="Бесплатные монеты" onClick={() => go('bonus')}>＋</button>
+        <button className="avatar" title="Профиль" onClick={() => go('profile')}>{(p.nick || '?')[0].toUpperCase()}</button>
       </header>
 
-      <main className="main">
-        {c ? <CasePage key={c.id} c={c} free={c.id === 'free'} onBack={() => go('cases')} />
-          : route.tab === 'cases' ? <CasesPage onOpen={(id) => go('case/' + id)} onBonus={() => go('bonus')} />
-          : route.tab === 'bonus' ? <BonusPage onFree={() => go('case/free')} />
-          : route.sub === 'upgrade' ? <UpgradePage onBack={() => go('games')} />
-          : route.sub === 'contract' ? <ContractPage onBack={() => go('games')} />
-          : route.tab === 'games' ? <GamesPage go={go} />
-          : route.tab === 'inv' ? <InventoryPage />
-          : <ProfilePage onSettings={() => setSettings(true)} />}
-      </main>
+      <div className="layout">
+        <Sidebar go={go} />
+        <main className="main">
+          {c ? <CasePage key={c.id} c={c} free={c.id === 'free'} onBack={() => go('cases')} />
+            : route.tab === 'cases' ? <CasesPage onOpen={(id) => go('case/' + id)} onBonus={() => go('bonus')} />
+            : route.tab === 'bonus' ? <BonusPage onFree={() => go('case/free')} />
+            : route.sub === 'contract' ? <ContractPage onBack={() => go('upgrade')} />
+            : route.tab === 'upgrade' ? <UpgradePage onBack={() => go('cases')} onContract={() => go('contract')} />
+            : route.tab === 'battles' ? <GamesPage go={go} />
+            : route.tab === 'inv' ? <InventoryPage />
+            : <ProfilePage onSettings={() => setSettings(true)} />}
+        </main>
+      </div>
 
       <nav className="botnav">
-        {TABS.map((t) => (
-          <button key={t.id} className={route.tab === t.id && !(c && t.id !== 'cases') ? 'on' : ''} onClick={() => go(t.id)}>
+        {TABS.filter((t) => t.mob).map((t) => (
+          <button key={t.id} className={route.tab === t.id ? 'on' : ''} onClick={() => go(t.id)}>
             <span className="ic">{t.ic}</span>{t.name}
             {t.id === 'bonus' && (freeReady || dailyReady) && <span className="dot" />}
           </button>
         ))}
+        <button className={route.tab === 'profile' || route.tab === 'inv' ? 'on' : ''} onClick={() => go('profile')}>
+          <span className="ic">👤</span>Профиль
+        </button>
       </nav>
 
       {settings && <SettingsModal onClose={() => setSettings(false)} />}

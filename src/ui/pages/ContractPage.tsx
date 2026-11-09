@@ -50,9 +50,11 @@ export function ContractPage({ onBack }: { onBack: () => void }) {
 
   return (
     <div>
-      <button className="back" onClick={onBack}>← Режимы</button>
       <div className="row" style={{ marginBottom: 14 }}>
-        <h1 style={{ fontSize: 24 }} className="grow">Контракты</h1>
+        <div className="page-tabs grow" style={{ marginBottom: 0 }}>
+          <button onClick={onBack}>⬆️ Апгрейдер</button>
+          <button className="on">📜 Контракты</button>
+        </div>
         <button className="btn sm" onClick={() => setBook(true)}>📖 Книга рецептов {p.recipes.length}/{RECIPES.length}</button>
       </div>
 

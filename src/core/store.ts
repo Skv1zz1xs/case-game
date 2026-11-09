@@ -255,7 +255,7 @@ export class Game {
       this.addItems([item]);
     }
     this.p.stats = { ...this.p.stats, upgrades: this.p.stats.upgrades + 1, upgradesWon: this.p.stats.upgradesWon + (res.win ? 1 : 0) };
-    this.emit('upgrade', { win: res.win, mult: target / stake, stake });
+    this.emit('upgrade', { win: res.win, mult: target / stake, stake, item });
     this.commit();
     return { ...res, item };
   }
