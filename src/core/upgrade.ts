@@ -1,5 +1,5 @@
 // Апгрейдер: шанс = ставка / цель × EDGE в пределах [MIN, MAX]
-import { UPGRADE_EDGE, UPGRADE_MIN_CHANCE, UPGRADE_MAX_CHANCE } from '../config/economy';
+import { UPGRADE_EDGE, UPGRADE_MIN_CHANCE, UPGRADE_MAX_CHANCE, UPGRADE_MAX_MULT } from '../config/economy';
 import { CASES, SkinDef } from '../data/cases';
 import { Item, round2 } from './items';
 import { Rng, uid } from './rng';
@@ -11,7 +11,7 @@ export function upgradeChance(stake: number, target: number): number {
 
 // Цель допустима, только если «честный» шанс не ниже минимума (иначе минимум дал бы плюс)
 export function targetAllowed(stake: number, target: number): boolean {
-  return target > stake && (stake / target) * UPGRADE_EDGE >= UPGRADE_MIN_CHANCE - 1e-9;
+  return target > stake && target <= stake * UPGRADE_MAX_MULT + 1e-9 && (stake / target) * UPGRADE_EDGE >= UPGRADE_MIN_CHANCE - 1e-9;
 }
 
 const ALL_SKINS: SkinDef[] = CASES.flatMap((c) => c.skins);

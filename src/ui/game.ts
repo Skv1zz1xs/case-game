@@ -34,6 +34,6 @@ game.onNotice = (n) => toast(n.text, 'good');
 
 export const fmt = (x: number) => {
   if (x >= 1e6) return (x / 1e6).toFixed(x >= 1e7 ? 1 : 2).replace('.', ',') + ' млн';
-  if (x >= 100) return Math.round(x).toLocaleString('ru-RU');
+  if (x >= 100 || Number.isInteger(x)) return Math.round(x).toLocaleString('ru-RU');
   return x.toFixed(2).replace('.', ',');
 };

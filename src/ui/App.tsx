@@ -13,6 +13,7 @@ import { ContractPage } from './pages/ContractPage';
 import { SettingsModal } from './components/SettingsModal';
 import { useNow } from './components/Countdown';
 import { Sidebar } from './components/Sidebar';
+import { tickPlay } from '../core/rewards';
 
 type Tab = 'inv' | 'cases' | 'battles' | 'upgrade' | 'bonus' | 'profile';
 const TABS: { id: Tab; ic: string; name: string; mob?: boolean }[] = [
@@ -45,6 +46,13 @@ export function App() {
     return () => removeEventListener('hashchange', f);
   }, []);
   const go = (path: string) => { location.hash = '/' + path; };
+  // время в игре считается, только пока вкладка открыта и видна
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (document.visibilityState === 'visible' && game.p.nick) { tickPlay(game, 15); game.commit(); }
+    }, 15000);
+    return () => clearInterval(t);
+  }, []);
 
   if (!p.nick) return <NickScreen />;
 

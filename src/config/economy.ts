@@ -101,6 +101,7 @@ export const UPGRADE_MIN_CHANCE = 0.01;
 export const UPGRADE_MAX_CHANCE = 0.75;
 export const UPGRADE_MAX_ITEMS = 6;
 export const UPGRADE_MULTIPLIERS = [1.5, 2, 3, 5, 10, 20, 50];
+export const UPGRADE_MAX_MULT = 95; // при 95 честный шанс = 1% (минимум)
 
 // Контракты: 10 предметов одной редкости → 1 следующей
 export const CONTRACT_SIZE = 10;
@@ -120,3 +121,31 @@ export const REEL_LENGTH = 60;     // клеток в ленте
 export const REEL_WIN_INDEX = 52;  // где лежит выигрыш
 export const SPIN_MS = 5600;
 export const SPIN_FAST_MS = 1400;
+
+// ——— Награды (страница «Награды») ———
+// За время в игре: цикл 60 минут активной игры, три награды внутри цикла
+export const PLAYTIME_REWARDS = [
+  { min: 10, coins: 30 },
+  { min: 30, coins: 70 },
+  { min: 60, coins: 160 },
+];
+// Ежедневный дроп: каждые 4 часа 4 предмета на выбор, забрать можно 2. Цены предметов — в этом диапазоне
+export const DAILY_DROP_HOURS = 4;
+export const DAILY_DROP_PICK = 2;
+export const DAILY_DROP_VALUE: [number, number] = [20, 140];
+// Серия входов: награда по дню серии (7-й — джекпот). type: 'coins' | 'skin' (скин примерно этой стоимости)
+export const STREAK_DAYS: { type: 'coins' | 'skin'; value: number }[] = [
+  { type: 'coins', value: 1000 }, { type: 'coins', value: 1150 }, { type: 'skin', value: 1300 },
+  { type: 'coins', value: 1450 }, { type: 'skin', value: 1600 }, { type: 'coins', value: 1750 },
+  { type: 'coins', value: 3500 },
+];
+// Колесо: бесплатный спин раз в час. 16 секторов; вес — шанс
+export const WHEEL_COOLDOWN_MS = 60 * 60 * 1000;
+export const WHEEL_SEGMENTS: { value: number; weight: number; skin?: boolean }[] = [
+  { value: 20, weight: 9 }, { value: 30, weight: 9 }, { value: 40, weight: 8 }, { value: 50, weight: 8, skin: true },
+  { value: 60, weight: 8 }, { value: 75, weight: 7, skin: true }, { value: 90, weight: 7 }, { value: 110, weight: 6, skin: true },
+  { value: 130, weight: 6 }, { value: 160, weight: 5, skin: true }, { value: 200, weight: 4 }, { value: 300, weight: 3, skin: true },
+  { value: 450, weight: 2 }, { value: 750, weight: 1, skin: true }, { value: 1500, weight: 0.4 }, { value: 5000, weight: 0.1, skin: true },
+];
+// Задания: новый набор каждые 3 часа
+export const QUEST_HOURS = 3;

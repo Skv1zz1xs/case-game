@@ -8,6 +8,8 @@ import { Rng, rand, uid, weighted, randRange } from './rng';
 import { rollUpgrade, targetAllowed, skinNear, itemWithPrice } from './upgrade';
 import { contractError, rollContractEx } from './contract';
 import type { Recipe } from '../data/recipes';
+import { rewardItem, questEvent } from './rewards';
+import { hashStr } from './rng';
 
 export type AnimMode = 'full' | 'short' | 'off';
 
@@ -37,6 +39,10 @@ export interface Profile {
   achievements: string[];
   recipes: string[];
   settings: Settings;
+  play: { secs: number; got: boolean[] };
+  drop: { win: number; picked: number[] };
+  wheelAt: number;
+  quests: { win: number; prog: Record<string, number>; got: string[] };
 }
 
 export const newProfile = (nick = ''): Profile => ({
@@ -44,6 +50,7 @@ export const newProfile = (nick = ''): Profile => ({
   stats: { opened: 0, spent: 0, earned: 0, sold: 0, upgrades: 0, upgradesWon: 0, contracts: 0, battles: 0, battlesWon: 0, freeOpened: 0 },
   freeAt: 0, daily: { day: '', streak: 0 }, promos: [], xp: 0, level: 1, rakeback: 0,
   eventOpens: {}, showcase: [], achievements: [], recipes: [],
+  play: { secs: 0, got: [false, false, false] }, drop: { win: -1, picked: [] }, wheelAt: 0, quests: { win: -1, prog: {}, got: [] },
   settings: { sound: true, volume: 0.5, anim: 'full', fast: false },
 });
 
@@ -75,7 +82,10 @@ export class Game {
     this.subs.forEach((f) => f());
   }
   notify(n: Notice) { this.notices.push(n); this.onNotice?.(n); }
-  emit(ev: string, data?: unknown) { this.hooks.forEach((h) => h(ev, data)); }
+  emit(ev: string, data?: unknown) {
+    questEvent(this, ev, data);
+    this.hooks.forEach((h) => h(ev, data));
+  }
 
   // ——— деньги и опыт ———
   addCoins(x: number) { this.p.balance = round2(this.p.balance + x); this.p.stats.earned = round2(this.p.stats.earned + x); }
@@ -131,6 +141,7 @@ export class Game {
     const c = caseById(caseId)!;
     const t = this.now();
     this.spend(c.price * n, true);
+    questEvent(this, 'spend', c.price * n);
     if (c.cat === 'event') {
       const w = eventWindow(c.id, t);
       const k = `${c.id}:${w.start}`;
@@ -201,14 +212,15 @@ export class Game {
     const yest = dayKey(this.now() - 86400000);
     const claimed = this.p.daily.day === today;
     const streak = claimed ? this.p.daily.streak : this.p.daily.day === yest ? this.p.daily.streak + 1 : 1;
-    const amount = E.DAILY_BASE + E.DAILY_STREAK_STEP * Math.min(streak - 1, E.DAILY_STREAK_MAX_DAYS);
-    return { claimed, streak, amount };
+    const day = E.STREAK_DAYS[(streak - 1) % E.STREAK_DAYS.length];
+    return { claimed, streak, amount: day.value, type: day.type, dayIndex: (streak - 1) % E.STREAK_DAYS.length };
   }
   claimDaily(): number {
     const d = this.dailyState();
     if (d.claimed) throw new Error('Уже получено сегодня');
     this.p.daily = { day: dayKey(this.now()), streak: d.streak };
-    this.addCoins(d.amount);
+    if (d.type === 'skin') this.addItems([rewardItem(d.amount, hashStr(this.p.nick + ':streak:' + this.p.daily.day), this.now(), 'pass')]);
+    else this.addCoins(d.amount);
     this.emit('daily');
     this.commit();
     return d.amount;

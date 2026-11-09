@@ -6,6 +6,8 @@ import { mulberry32, Rng, pick } from '../src/core/rng';
 import { Item, round2 } from '../src/core/items';
 import { CONTRACT_SIZE, PROMO_CODES } from '../src/config/economy';
 import { targetAllowed } from '../src/core/upgrade';
+import * as RW from '../src/core/rewards';
+const REWARDS = !process.argv.includes('--no-rewards');
 
 const arg = (k: string, d: number) => { const i = process.argv.indexOf('--' + k); return i > 0 ? Number(process.argv[i + 1]) : d; };
 const N = arg('n', 4000);
@@ -39,6 +41,14 @@ function session(seed: number) {
   while (t < end) {
     // фри кейс — всегда, как только готов
     if (g.freeReady()) { g.openFree(); t += 7000; }
+    if (REWARDS) {
+      RW.playtime(g).forEach((x, i) => { if (x.ready) RW.claimPlay(g, i); });
+      if (RW.wheelReady(g)) RW.spinWheel(g);
+      const o = RW.dropOffer(g);
+      for (let k = 0; k < 4 && RW.dropOffer(g).picked.length < 2; k++) if (!o.picked.includes(k)) RW.pickDrop(g, k);
+      for (const q of RW.quests(g).list) if (!q.got && q.prog >= q.goal) RW.claimQuest(g, q.id);
+    }
+    const t0 = t;
     const fast = r() < style.fast;
     const stepMs = fast ? 3500 : 8000;
 
@@ -86,6 +96,7 @@ function session(seed: number) {
     t += stepMs;
     const w = worth(g);
     if (w > peak) peak = w;
+    if (REWARDS) RW.tickPlay(g, Math.round((t - t0) / 1000));
     if (!calm && w > 20000 && r() < 0.35) calm = true;
   }
   return { peak, final: worth(g), busts, bustWait, style: style.name, opened: g.p.stats.opened };
