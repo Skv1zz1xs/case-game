@@ -52,18 +52,18 @@ export const KIND_NAMES: Record<WeaponKind, string> = {
 // Узоры покраски (рисуются в ui/components/ItemArt.tsx)
 export type PatternStyle =
   | 'solid' | 'fade' | 'camo' | 'damascus' | 'carbon' | 'acid' | 'hologram'
-  | 'marble' | 'tiger' | 'digital' | 'stripes' | 'galaxy' | 'lava' | 'circuit' | 'anodized' | 'graphic' | 'flames' | 'retrowave' | 'lowpoly' | 'splatter' | 'beast' | 'halftone' | 'neongrid' | 'ornament';
+  | 'marble' | 'tiger' | 'digital' | 'stripes' | 'galaxy' | 'lava' | 'circuit' | 'anodized' | 'graphic' | 'flames' | 'retrowave' | 'lowpoly' | 'splatter' | 'beast' | 'halftone' | 'neongrid' | 'ornament' | 'topo' | 'kintsugi' | 'scales' | 'honeycomb' | 'swirl' | 'splinter';
 
 // Чем выше редкость, тем «дороже» выглядит узор
 export const PATTERNS_BY_TIER: PatternStyle[][] = [
-  ['solid', 'camo', 'digital', 'stripes', 'halftone'],                    // ширпотреб
-  ['camo', 'digital', 'carbon', 'fade', 'lowpoly', 'ornament'],           // промышленное
-  ['anodized', 'fade', 'tiger', 'lowpoly', 'neongrid', 'splatter'],       // армейское
-  ['graphic', 'flames', 'retrowave', 'splatter', 'anodized', 'damascus'], // запрещённое
-  ['beast', 'graphic', 'retrowave', 'flames', 'marble', 'lava'],          // засекреченное
-  ['beast', 'hologram', 'galaxy', 'flames', 'retrowave', 'lava'],         // тайное
-  ['damascus', 'marble', 'galaxy', 'fade', 'anodized', 'lava'],           // редкое (ножи и перчатки)
-  ['hologram', 'galaxy', 'beast'],                                         // контрабанда
+  ['camo', 'digital', 'stripes', 'halftone', 'splinter', 'topo'],                // ширпотреб
+  ['camo', 'splinter', 'carbon', 'fade', 'lowpoly', 'ornament', 'topo'],         // промышленное
+  ['anodized', 'fade', 'tiger', 'honeycomb', 'neongrid', 'splatter', 'swirl'],  // армейское
+  ['graphic', 'flames', 'retrowave', 'scales', 'swirl', 'damascus', 'honeycomb'], // запрещённое
+  ['beast', 'graphic', 'retrowave', 'flames', 'kintsugi', 'lava', 'scales'],     // засекреченное
+  ['beast', 'hologram', 'galaxy', 'kintsugi', 'retrowave', 'lava', 'swirl'],     // тайное
+  ['damascus', 'marble', 'galaxy', 'fade', 'anodized', 'kintsugi', 'scales'],    // редкое (ножи и перчатки)
+  ['hologram', 'galaxy', 'beast', 'kintsugi'],                                    // контрабанда
 ];
 
 // Фазы ножей: у каждого «Редкого» скина свои названия, выбираются по хешу

@@ -14,6 +14,8 @@ export interface Scheme { sec: string; acc: string; secKind: 0 | 1 | 2; accKind:
 export interface Finish {
   style: PatternStyle;
   scheme?: Scheme;      // цвета частей: второстепенные детали и акценты
+  word?: string;        // трафаретное слово-наклейка
+  tier?: number;        // редкость (0..7): сколько наклеек
   image?: string;        // свой скин-картинка (из Figma): путь от корня сайта, напр. 'skins/my.png'
   colors: [string, string, string];
   seed: number;
@@ -136,7 +138,7 @@ export function buildCase(t: ThemeDef): CaseDef {
         skin: nameFor(tier),
         rarity: r.id,
         base: mult, // временно: множитель цены кейса
-        finish: { style: styles[Math.floor(rng() * styles.length)], colors: [c(0), c(1), c(2)], seed: Math.floor(rng() * 1e9), scheme: makeScheme(rng, pal, tier) },
+        finish: { style: styles[Math.floor(rng() * styles.length)], colors: [c(0), c(1), c(2)], seed: Math.floor(rng() * 1e9), scheme: makeScheme(rng, pal, tier), tier },
         phases: r.id === 'rare' ? makePhases(rng, PHASE_NAMES) : undefined,
       });
     });
@@ -151,6 +153,11 @@ export function buildCase(t: ThemeDef): CaseDef {
   }
   const scale = (rtp * t.price) / ev;
   for (const s of skins) s.base = s.base * scale;
+  // Слово-наклейка из названия скина (одно короткое слово)
+  for (const sk of skins) {
+    const w = sk.skin.replace(/[«»"]/g, '').split(/[\s-]+/).sort((x, y) => y.length - x.length)[0] ?? '';
+    sk.finish.word = w.length <= 10 ? w : w.slice(0, 9);
+  }
   // Внутри редкости — от дешёвого к дорогому
   skins.sort((a, b) => b.base - a.base);
 

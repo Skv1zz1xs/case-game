@@ -56,7 +56,7 @@ def assign_roles(o):
     acc = 0; thr = vols[0] if vols else 0
     for v in vols:
         acc += v; thr = v
-        if acc > total * 0.6: break
+        if acc > total * 0.75: break
     col = o.data.color_attributes.new('Col', 'BYTE_COLOR', 'CORNER') if 'Col' not in o.data.color_attributes else o.data.color_attributes['Col']
     roles = {0: 0, 1: 0, 2: 0, 3: 0}
     layer = bm.loops.layers.color.get('Col') or bm.loops.layers.color.new('Col')

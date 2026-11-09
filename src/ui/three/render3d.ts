@@ -6,7 +6,7 @@ import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { ARTS, Art, Mat } from '../components/weaponArt';
-import { paintSkin, wearMap, FINISH_KIND } from './skinPainter';
+import { paintSkin, wearMap, FINISH_KIND, PER_PART } from './skinPainter';
 import type { Finish } from '../../data/cases';
 import type { WeaponModel } from '../../data/weapons';
 import { PHASE_PALETTES } from '../../data/weapons';
@@ -69,7 +69,7 @@ const texCache = new Map<string, Promise<THREE.Texture>>();
 
 function skinTexture(art: Art, f: Finish, float: number, wearSeed: string): Promise<THREE.Texture> {
   const fb = Math.round(float * 10);
-  const key = `${f.image ?? f.style}|${f.colors.join()}|${f.seed}|${art.vb.join()}`; void fb;
+  const key = `${f.image ?? f.style}|${f.colors.join()}|${f.seed}|${art.vb.join()}|${f.word ?? ''}|${f.tier ?? 0}`; void fb;
   const hit = texCache.get(key);
   if (hit) return hit;
   const p = (async () => {
@@ -82,7 +82,7 @@ function skinTexture(art: Art, f: Finish, float: number, wearSeed: string): Prom
       c = document.createElement('canvas'); c.width = W; c.height = H;
       c.getContext('2d')!.drawImage(img, 0, 0, W, H);
     } else {
-      c = paintSkin(f, W, H);
+      c = paintSkin(f, W, H, f.word ?? '', f.tier ?? 0);
     }
     void float; void wearSeed;
     const t = new THREE.CanvasTexture(c);
@@ -178,15 +178,18 @@ function skinnedMaterial(orig: THREE.MeshStandardMaterial, skin: THREE.Texture, 
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, { uSkin: { value: skin }, uMask: { value: mask }, uWear: { value: wearTex(wearSeed) }, uMin, uSize, uFloat, uKind,
       uSec: { value: hexColor(sc.sec) }, uAcc: { value: hexColor(sc.acc) }, uSecKind: { value: sc.secKind }, uAccKind: { value: sc.accKind },
-      uDetR: { value: detailTex('metal_plate_rough.jpg') }, uLeather: { value: detailTex('brown_leather_diff.jpg', true) }, uGlove: { value: glove ? 1 : 0 } });
+      uDetR: { value: detailTex('metal_plate_rough.jpg') }, uLeather: { value: detailTex('brown_leather_diff.jpg', true) }, uGlove: { value: glove ? 1 : 0 }, uPerPart: { value: PER_PART.has(style) ? 1 : 0 } });
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec2 vSkinUv;\nvarying float vRole;\nattribute vec4 aPart;\nuniform vec2 uMin; uniform vec2 uSize;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSkinUv = vec2((position.x - uMin.x) / uSize.x, 1.0 - (position.y - uMin.y) / uSize.y);\nvRole = floor(pow(aPart.r, 1.0 / 2.2) * 3.0 + 0.5); // цвет вершин экспортирован в линейном пространстве');
+      .replace('#include <common>', '#include <common>\nvarying vec2 vSkinUv;\nvarying float vRole;\nvarying float vPart;\nattribute vec4 aPart;\nuniform vec2 uMin; uniform vec2 uSize;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSkinUv = vec2((position.x - uMin.x) / uSize.x, 1.0 - (position.y - uMin.y) / uSize.y);\nvRole = floor(pow(aPart.r, 1.0 / 2.2) * 3.0 + 0.5); // цвет вершин экспортирован в линейном пространстве\nvPart = aPart.g;');
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec2 vSkinUv;\nuniform sampler2D uSkin; uniform sampler2D uMask; uniform sampler2D uWear; uniform float uFloat; uniform float uKind;\nuniform vec3 uSec; uniform vec3 uAcc; uniform float uSecKind; uniform float uAccKind; uniform sampler2D uDetR; uniform sampler2D uLeather; uniform float uGlove;\nvarying float vRole;\nfloat gPaint; float gWorn; float gRoleMetal; float gRoleRough; float gDet;')
+      .replace('#include <common>', '#include <common>\nvarying vec2 vSkinUv;\nuniform sampler2D uSkin; uniform sampler2D uMask; uniform sampler2D uWear; uniform float uFloat; uniform float uKind;\nuniform vec3 uSec; uniform vec3 uAcc; uniform float uSecKind; uniform float uAccKind; uniform sampler2D uDetR; uniform sampler2D uLeather; uniform float uGlove; uniform float uPerPart;\nvarying float vRole; varying float vPart;\nfloat gPaint; float gWorn; float gRoleMetal; float gRoleRough; float gDet;')
       .replace('#include <map_fragment>', `#include <map_fragment>
         float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-        vec3 sk = texture2D(uSkin, vSkinUv).rgb;
+        // узорные стили: у каждой детали свой сдвиг рисунка (как будто красили отдельно)
+        vec2 suv = vSkinUv;
+        if (uPerPart > 0.5) suv = fract(vSkinUv * 0.8 + vec2(fract(vPart * 37.13), fract(vPart * 19.71)));
+        vec3 sk = texture2D(uSkin, suv).rgb;
         gPaint = texture2D(uMask, vSkinUv).r;
         // износ: где карта износа ниже порога — краска стёрта до металла
         float w = texture2D(uWear, vSkinUv * vec2(3.0, 2.0)).r;
@@ -211,7 +214,7 @@ function skinnedMaterial(orig: THREE.MeshStandardMaterial, skin: THREE.Texture, 
         float rf = (gRoleRough >= 0.0 ? gRoleRough : roughnessFactor) * (0.8 + 0.4 * gDet);
         roughnessFactor = mix(0.32, mix(rf, 0.4, gWorn), gPaint);`);
   };
-  m.customProgramCacheKey = () => 'skin3';
+  m.customProgramCacheKey = () => 'skin4';
   return m;
 }
 

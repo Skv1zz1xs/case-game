@@ -43,7 +43,11 @@ export const FINISH_KIND: Record<string, number> = {
   anodized: 1, fade: 0.95, galaxy: 0.9, hologram: 1, damascus: 1, marble: 0.6, lava: 0.5, circuit: 0.7,
   carbon: 0.6, graphic: 0.5, flames: 0.55, retrowave: 0.55, beast: 0.5, splatter: 0.45, acid: 0.55, lowpoly: 0.6,
   neongrid: 0.6, ornament: 0.8, halftone: 0.4, tiger: 0.3, stripes: 0.35, camo: 0.1, digital: 0.15, solid: 0.4,
+  topo: 0.3, kintsugi: 0.7, scales: 0.85, honeycomb: 0.6, swirl: 0.75, splinter: 0.15,
 };
+
+// Повторяющиеся узоры красятся на каждой детали отдельно (со сдвигом), сюжетные — цельно
+export const PER_PART = new Set(['camo', 'digital', 'carbon', 'damascus', 'honeycomb', 'scales', 'splinter', 'stripes', 'tiger', 'topo', 'ornament', 'halftone', 'circuit', 'neongrid']);
 
 // Попиксельные стили (на шуме)
 function pixelStyle(style: string, f: Finish, W: number, H: number, rng: Rng): ImageData {
@@ -112,6 +116,27 @@ function pixelStyle(style: string, f: Finish, W: number, H: number, rng: Rng): I
           c = mix(c, A, 0.2);
           break;
         }
+        case 'topo': { // топографические линии
+          const h = fbm(u * 0.5, v * 0.5, 5) * 6;
+          const line = 1 - smooth(0.0, 0.12, Math.abs(h - Math.round(h)));
+          c = mix(A, B, clamp01(0.5 + fbm(u * 0.2, v * 0.2, 2)));
+          c = mix(c, C, line * 0.9);
+          break;
+        }
+        case 'kintsugi': { // тёмная керамика, трещины залиты золотом
+          const n1 = Math.abs(fbm(u * 0.8, v * 0.8, 6)), n3 = Math.abs(fbm(u * 1.7 + 20, v * 1.7, 5));
+          const crack = Math.max(1 - smooth(0.0, 0.03, n1), (1 - smooth(0.0, 0.02, n3)) * 0.8);
+          c = mix([18, 18, 22], A, 0.18 + 0.1 * fbm(u * 3, v * 3, 2));
+          c = mix(c, mix([255, 200, 90], [255, 236, 170], crack), crack);
+          break;
+        }
+        case 'swirl': { // гидрографика: закрученные разводы краски
+          const wx = fbm(u * 0.4, v * 0.4, 4) * 3, wy = fbm(u * 0.4 + 7, v * 0.4 + 3, 4) * 3;
+          const t = 0.5 + 0.5 * Math.sin((u * 0.6 + wx) * 3 + (v * 0.6 + wy) * 2);
+          c = ramp([A, B, C, A], t);
+          c = mix(c, [255, 255, 255], Math.pow(t, 18) * 0.6);
+          break;
+        }
         case 'camo': { // многослойный камуфляж с рваными краями
           const l1 = fbm(u * 0.7, v * 0.7, 5), l2 = fbm(u * 0.7 + 50, v * 0.7, 5), l3 = fbm(u * 1.1 + 90, v * 1.1, 5);
           c = A;
@@ -130,7 +155,7 @@ function pixelStyle(style: string, f: Finish, W: number, H: number, rng: Rng): I
   return img;
 }
 
-const PIXEL = new Set(['fade', 'anodized', 'galaxy', 'marble', 'damascus', 'lava', 'acid', 'hologram', 'camo']);
+const PIXEL = new Set(['fade', 'anodized', 'galaxy', 'marble', 'damascus', 'lava', 'acid', 'hologram', 'camo', 'topo', 'kintsugi', 'swirl']);
 
 // Векторные стили (рисунок поверх шумовой базы)
 function vectorStyle(style: string, f: Finish, g: CanvasRenderingContext2D, W: number, H: number, r: Rng) {
@@ -263,13 +288,84 @@ function vectorStyle(style: string, f: Finish, g: CanvasRenderingContext2D, W: n
       }
       break;
     }
+    case 'scales': { // драконья чешуя: ряды полукругов с градиентом и бликом
+      g.fillStyle = '#0c0b10'; g.fillRect(0, 0, W, H);
+      const s = 12 * S;
+      for (let y = -s; y < H + s; y += s * 0.55) for (let x = -s; x < W + s; x += s) {
+        const ox = (Math.round(y / (s * 0.55)) % 2) * s / 2;
+        const gr = g.createRadialGradient(x + ox, y - s * 0.2, s * 0.05, x + ox, y, s * 0.6);
+        gr.addColorStop(0, c); gr.addColorStop(0.5, a); gr.addColorStop(1, b);
+        g.fillStyle = gr; g.beginPath(); g.arc(x + ox, y, s * 0.56, 0, Math.PI); g.fill();
+        g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 1.2 * S; g.stroke();
+      }
+      break;
+    }
+    case 'honeycomb': { // соты с подсветкой
+      g.fillStyle = b; g.fillRect(0, 0, W, H);
+      const R = 7 * S, hh = R * Math.sqrt(3);
+      for (let y = 0; y < H + hh; y += hh) for (let x = 0, k = 0; x < W + R * 2; x += R * 1.5, k++) {
+        const cy = y + (k % 2 ? hh / 2 : 0);
+        g.beginPath(); for (let i = 0; i < 6; i++) { const an = Math.PI / 3 * i; g.lineTo(x + R * 0.88 * Math.cos(an), cy + R * 0.88 * Math.sin(an)); } g.closePath();
+        const lit = r();
+        g.fillStyle = lit > 0.85 ? c : a; g.globalAlpha = lit > 0.85 ? 1 : 0.55 + lit * 0.35; g.fill(); g.globalAlpha = 1;
+        g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1.4 * S; g.stroke();
+      }
+      break;
+    }
+    case 'splinter': { // осколочный камуфляж: острые многоугольники
+      g.fillStyle = a; g.fillRect(0, 0, W, H);
+      const cols = [b, c, '#1b1d1a'];
+      for (let i = 0; i < 46; i++) {
+        const x = r() * W, y = r() * H, sz = (14 + r() * 30) * S, an = -0.5 + r() * 0.3;
+        g.fillStyle = cols[i % 3]; g.beginPath();
+        for (let k = 0; k < 4 + Math.floor(r() * 2); k++) { const t = an + k * 1.4 + r() * 0.5; g.lineTo(x + Math.cos(t) * sz * (0.4 + r()), y + Math.sin(t) * sz * 0.35 * (0.4 + r())); }
+        g.closePath(); g.fill();
+      }
+      break;
+    }
     default: { g.fillStyle = a; g.fillRect(0, 0, W, H); }
   }
   g.restore();
 }
 
+// Наклейки и надписи поверх покраски: трафаретное слово, эмблема-розетка, полосы «опасность», номер
+export function decals(g: CanvasRenderingContext2D, W: number, H: number, f: Finish, word: string, tier: number) {
+  const r = mulberry32(f.seed ^ 0x27d4eb2f);
+  const n = tier >= 5 ? 3 : tier >= 3 ? 2 : tier >= 1 ? 1 : 0;
+  const S = W / 200;
+  const [a, , c] = f.colors;
+  const kinds = ['word', 'roundel', 'hazard', 'number'];
+  for (let i = 0; i < n; i++) {
+    const k = kinds[Math.floor(r() * kinds.length)];
+    const x = W * (0.12 + r() * 0.6), y = H * (0.3 + r() * 0.45);
+    g.save(); g.translate(x, y); g.rotate((r() - 0.5) * 0.25);
+    g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 3 * S;
+    if (k === 'word' && word) {
+      g.font = `900 ${Math.round(11 * S)}px "Roboto Condensed", Arial Narrow, sans-serif`;
+      g.fillStyle = r() < 0.5 ? '#f4f4f4' : '#111';
+      g.strokeStyle = c; g.lineWidth = 1.2 * S;
+      g.fillText(word.toUpperCase(), 0, 0); g.strokeText(word.toUpperCase(), 0, 0);
+    } else if (k === 'roundel') {
+      const R = 9 * S;
+      g.fillStyle = '#111'; g.beginPath(); g.arc(0, 0, R, 0, 7); g.fill();
+      g.fillStyle = c; g.beginPath(); g.arc(0, 0, R * 0.78, 0, 7); g.fill();
+      g.fillStyle = a; g.beginPath(); for (let t = 0; t < 10; t++) { const rr = t % 2 ? R * 0.28 : R * 0.68, an = -Math.PI / 2 + t * Math.PI / 5; g.lineTo(Math.cos(an) * rr, Math.sin(an) * rr); } g.closePath(); g.fill();
+    } else if (k === 'hazard') {
+      g.beginPath(); g.rect(0, 0, 40 * S, 6 * S); g.clip();
+      g.fillStyle = '#ffcc00'; g.fillRect(0, 0, 40 * S, 6 * S);
+      g.fillStyle = '#111'; for (let t = -2; t < 12; t++) { g.beginPath(); g.moveTo(t * 5 * S, 6 * S); g.lineTo(t * 5 * S + 2.5 * S, 6 * S); g.lineTo(t * 5 * S + 8.5 * S, 0); g.lineTo(t * 5 * S + 6 * S, 0); g.fill(); }
+    } else {
+      g.font = `900 italic ${Math.round(16 * S)}px "Roboto Condensed", Arial Narrow, sans-serif`;
+      g.fillStyle = '#fff'; g.strokeStyle = '#111'; g.lineWidth = 2 * S;
+      const t = String(1 + Math.floor(r() * 99)).padStart(2, '0');
+      g.strokeText(t, 0, 0); g.fillText(t, 0, 0);
+    }
+    g.restore();
+  }
+}
+
 // Финальная текстура: стиль + общая фактура (зерно, лёгкая виньетка)
-export function paintSkin(f: Finish, W: number, H: number): HTMLCanvasElement {
+export function paintSkin(f: Finish, W: number, H: number, word = '', tier = 0): HTMLCanvasElement {
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d')!;
   const r = mulberry32(f.seed ^ 0x5bd1e995);
@@ -284,6 +380,7 @@ export function paintSkin(f: Finish, W: number, H: number): HTMLCanvasElement {
     d[i] = Math.max(0, Math.min(255, d[i] * (1 + n))); d[i + 1] = Math.max(0, Math.min(255, d[i + 1] * (1 + n))); d[i + 2] = Math.max(0, Math.min(255, d[i + 2] * (1 + n)));
   }
   g.putImageData(gr, 0, 0);
+  decals(g, W, H, f, word, tier);
   return c;
 }
 
