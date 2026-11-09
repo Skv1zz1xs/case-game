@@ -87,6 +87,11 @@ export const PROMO_CODES: Record<string, number> = {
   'ГЕМ': 777,
 };
 
+// Промокоды-предметы (для теста): дают нож с фазой нужного уровня. Один раз на игрока.
+export const PROMO_ITEMS: Record<string, { caseId: string; tier: 'rare' | 'gem' | 'supergem' }> = {
+  'СУПЕРГЕМ': { caseId: 'kn_night', tier: 'supergem' },
+};
+
 // Копилка (рейкбек): доля от трат на кейсы, забирается вручную
 export const RAKEBACK_RATE = 0.01;
 

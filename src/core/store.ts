@@ -3,7 +3,7 @@ import * as E from '../config/economy';
 import { CaseDef, caseById, eventWindow, skinById } from '../data/cases';
 import { FREE_CASE_TABLE } from '../config/economy';
 import { FREE_SKINS } from '../data/free';
-import { Item, openCase, round2 } from './items';
+import { Item, openCase, round2, makeItemWithTier } from './items';
 import { itemWithPrice } from './upgrade';
 import { skinById as skinOf } from '../data/cases';
 const rewardItemSkin = (skinId: string, value: number, rng: Rng, ts: number) => ({ ...itemWithPrice(skinOf(skinId)!, value, rng, 'pass', ts), rarity: skinOf(skinId)!.rarity });
@@ -240,6 +240,19 @@ export class Game {
   }
   redeem(code: string): number {
     const c = code.trim().toUpperCase().replace(/Ё/g, 'Е');
+    const ik = Object.keys(E.PROMO_ITEMS).find((k) => k.replace(/Ё/g, 'Е') === c);
+    if (ik) {
+      if (this.p.promos.includes(ik)) throw new Error('Промокод уже использован');
+      const pi = E.PROMO_ITEMS[ik];
+      const skin = caseById(pi.caseId)?.skins.find((s) => s.rarity === 'rare' && s.phases);
+      if (!skin) throw new Error('Предмет для промокода не найден');
+      const it = makeItemWithTier(skin, pi.tier, this.rng, 'secret', this.now());
+      this.p.promos = [...this.p.promos, ik];
+      this.addItems([it]);
+      this.notify({ kind: 'info', text: `Промокод: ${skin.model.name} | ${skin.skin} (${it.pattern?.name}) в инвентаре!` });
+      this.commit();
+      return it.price;
+    }
     const key = Object.keys(E.PROMO_CODES).find((k) => k.replace(/Ё/g, 'Е') === c);
     if (!key) throw new Error('Такого промокода нет');
     if (this.p.promos.includes(key)) throw new Error('Промокод уже использован');

@@ -52,6 +52,16 @@ export function rollPattern(skin: SkinDef, rng: Rng): Pattern {
   return { n, tier, name };
 }
 
+// Нож с заданной фазой (для промокодов и тестов)
+export function makeItemWithTier(skin: SkinDef, tier: PatternTier, rng: Rng, src: Item['src'], ts: number): Item {
+  let n = 0;
+  while (n < 1000 && patternTier(skin.id, n) !== tier) n++;
+  const ph = skin.phases!;
+  const pattern: Pattern = { n, tier, name: tier === 'normal' ? ph.normal[n % ph.normal.length] : ph[tier] };
+  const float = Math.round(rng() * 0.06 * 1e6) / 1e6;
+  return { id: uid(rng), skinId: skin.id, caseId: skin.caseId, rarity: skin.rarity, float, st: false, pattern, price: priceOf(skin, float, false, pattern), ts, src };
+}
+
 export function priceOf(skin: SkinDef, float: number, st: boolean, pattern?: Pattern): number {
   let p = skin.base * wearMult(float) * (st ? STATTRAK_MULT : 1);
   if (pattern) p *= PATTERN_TIERS.find((t) => t.id === pattern.tier)!.mult;

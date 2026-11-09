@@ -171,7 +171,7 @@ function skinnedMaterial(orig: THREE.MeshStandardMaterial, skin: THREE.Texture, 
     iridescence: style === 'hologram' ? 0.9 : gem >= 2 ? (gem === 3 ? 1 : 0.7) : 0, iridescenceIOR: gem === 3 ? 2.0 : 1.6,
   });
   if (gem >= 1) { m.metalness = 1; m.roughness = gem >= 2 ? 0.05 : 0.12; m.clearcoat = 1; m.clearcoatRoughness = 0.02; }
-  if (gem >= 2) { m.emissive = hexColor(gemColor); m.emissiveIntensity = gem === 3 ? 0.35 : 0.18; }
+  if (gem >= 2) { m.emissive = hexColor(gemColor); m.emissiveIntensity = gem === 3 ? 0.2 : 0.12; }
   const uTime = { value: 0 };
   m.userData.uTime = uTime;
   const uMin = { value: new THREE.Vector2(box.min.x, box.min.y) };
@@ -210,7 +210,9 @@ function skinnedMaterial(orig: THREE.MeshStandardMaterial, skin: THREE.Texture, 
         if (role < 0.5 && uGem > 2.5) {
           // супергем: бегущий радужный перелив
           float t = uTime * 0.8 + vSkinUv.x * 6.0 + vSkinUv.y * 3.0;
-          roleCol = mix(roleCol, roleCol * (0.8 + 0.5 * vec3(0.5 + 0.5 * sin(t), 0.5 + 0.5 * sin(t + 2.1), 0.5 + 0.5 * sin(t + 4.2))), 0.6);
+          vec3 rainbow = vec3(0.5 + 0.5 * sin(t), 0.5 + 0.5 * sin(t + 2.1), 0.5 + 0.5 * sin(t + 4.2));
+          float band = pow(0.5 + 0.5 * sin(t * 0.7 - vSkinUv.x * 4.0), 6.0); // яркая полоса, бегущая по клинку
+          roleCol = mix(roleCol, rainbow, 0.35) + band * 0.18;
         }
         if (role > 0.5 && role < 1.5) { roleCol = uSec; gRoleMetal = uSecKind > 1.5 ? 0.9 : 0.1; gRoleRough = uSecKind > 0.5 ? 0.22 : 0.7; }
         else if (role > 1.5 && role < 2.5) { roleCol = uAcc; gRoleMetal = uAccKind > 1.5 ? 1.0 : 0.2; gRoleRough = uAccKind > 1.5 ? 0.18 : 0.35; }

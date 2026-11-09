@@ -151,3 +151,14 @@ describe('батлы', () => {
     expect(r.totals[r.winners[0]]).toBe(Math.min(...r.totals));
   });
 });
+
+describe('промокод на супергем', () => {
+  it('выдаёт нож с фазой «супергем» один раз', () => {
+    const g = new Game(newProfile('t'), mulberry32(3), () => 0);
+    g.redeem('супергем');
+    const it = g.p.inventory[0];
+    expect(it.rarity).toBe('rare');
+    expect(it.pattern?.tier).toBe('supergem');
+    expect(() => g.redeem('СУПЕРГЕМ')).toThrow();
+  });
+});
