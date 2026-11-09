@@ -73,7 +73,7 @@ function skinTexture(art: Art, f: Finish, float: number, wearSeed: string): Prom
   const hit = texCache.get(key);
   if (hit) return hit;
   const p = (async () => {
-    const W = 1024, H = Math.round((1024 * art.vb[3]) / art.vb[2]);
+    const W = 768, H = Math.round((768 * art.vb[3]) / art.vb[2]);
     let c: HTMLCanvasElement;
     if (f.image) {
       const img = new Image();
@@ -381,8 +381,9 @@ export function renderThumb(model: WeaponModel, finish: Finish, o: ModelOpts = {
       m.traverse((o2) => { if (o2 instanceof THREE.Mesh) (o2.material as THREE.Material).dispose(); });
       return url;
     } catch (e) {
-      console.warn('3D недоступно, остаёмся на 2D', e);
-      failed = true;
+      // ошибка одного скина не должна выключать 3D для всех остальных
+      console.error('Ошибка 3D-превью', model.id, finish.style, e);
+      if (!stage) failed = true;
       return null;
     }
   });

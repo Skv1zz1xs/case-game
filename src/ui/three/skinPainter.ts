@@ -252,28 +252,48 @@ function vectorStyle(style: string, f: Finish, g: CanvasRenderingContext2D, W: n
       }
       break;
     }
-    case 'carbon': {
-      g.fillStyle = '#111316'; g.fillRect(0, 0, W, H);
-      const s = 6 * S;
+    case 'carbon': { // карбоновое плетение в цвете скина: пучки нитей с бликом
+      const base = hex(b), tint = hex(a);
+      g.fillStyle = `rgb(${base.map((v) => v * 0.35).join(',')})`; g.fillRect(0, 0, W, H);
+      const s = 5 * S;
       for (let y = 0; y < H; y += s) for (let x = 0; x < W; x += s) {
-        const k = ((x / s + y / s) | 0) % 2;
+        const k = (Math.floor(x / s) + Math.floor(y / s)) % 2;
         const gr = k ? g.createLinearGradient(x, y, x + s, y) : g.createLinearGradient(x, y, x, y + s);
-        gr.addColorStop(0, '#1a1d22'); gr.addColorStop(0.5, '#3a3f48'); gr.addColorStop(1, '#16181c');
-        g.fillStyle = gr; g.fillRect(x + 0.5, y + 0.5, s - 1, s - 1);
+        const lo = mix(base, [0, 0, 0], 0.55), hi = mix(tint, [255, 255, 255], 0.15);
+        gr.addColorStop(0, `rgb(${lo.join(',')})`); gr.addColorStop(0.5, `rgb(${hi.join(',')})`); gr.addColorStop(1, `rgb(${lo.join(',')})`);
+        g.fillStyle = gr; g.fillRect(x + 0.4, y + 0.4, s - 0.8, s - 0.8);
       }
-      g.globalCompositeOperation = 'overlay'; g.fillStyle = a; g.globalAlpha = 0.45; g.fillRect(0, 0, W, H);
+      // широкий блик лака по диагонали
+      const sh = g.createLinearGradient(0, 0, W, H); sh.addColorStop(0.3, 'rgba(255,255,255,0)'); sh.addColorStop(0.5, 'rgba(255,255,255,0.18)'); sh.addColorStop(0.7, 'rgba(255,255,255,0)');
+      g.fillStyle = sh; g.fillRect(0, 0, W, H);
       break;
     }
-    case 'digital': {
-      g.fillStyle = a; g.fillRect(0, 0, W, H);
-      const s = 5 * S, cols = [b, c, '#1c1c1a'];
+    case 'digital': { // пиксельный камуфляж: 4 тона, крупные блоки + мелкий «шум» по краям пятен
       const { fbm } = makeNoise(f.seed);
-      for (let y = 0; y < H; y += s) for (let x = 0; x < W; x += s) { const n = fbm(x / W * 5, y / W * 5, 3); if (n > -0.02) { g.fillStyle = cols[n > 0.18 ? 2 : n > 0.08 ? 1 : 0]; g.fillRect(x, y, s, s); } }
+      const tones = [a, b, c, `rgb(${mix(hex(b), [0, 0, 0], 0.6).join(',')})`];
+      const big = 6 * S, small = 3 * S;
+      for (let y = 0; y < H; y += small) for (let x = 0; x < W; x += small) {
+        const bx = Math.floor(x / big) * big, by = Math.floor(y / big) * big;
+        let n = fbm(bx / W * 4, by / W * 4, 4);
+        n += (fbm(x / W * 30, y / W * 30, 2)) * 0.12; // мелкие пиксели на границах
+        g.fillStyle = tones[n > 0.2 ? 3 : n > 0.07 ? 2 : n > -0.08 ? 1 : 0];
+        g.fillRect(x, y, small + 0.5, small + 0.5);
+      }
       break;
     }
-    case 'tiger': case 'stripes': {
+    case 'stripes': { // гоночные полосы с окантовкой поверх двухтонного лака
+      const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, a); gr.addColorStop(1, `rgb(${mix(hex(a), hex(b), 0.6).join(',')})`);
+      g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      const y0 = H * (0.32 + r() * 0.2), w1 = 7 * S, gap = 3 * S;
+      for (const [yy, ww] of [[y0, w1], [y0 + w1 + gap, w1 * 0.55]] as [number, number][]) {
+        g.fillStyle = '#0b0b0f'; g.fillRect(0, yy - 1.2 * S, W, ww + 2.4 * S);
+        g.fillStyle = c; g.fillRect(0, yy, W, ww);
+      }
+      break;
+    }
+    case 'tiger': {
       g.fillStyle = a; g.fillRect(0, 0, W, H);
-      g.fillStyle = style === 'tiger' ? '#140c06' : b;
+      g.fillStyle = `rgb(${mix(hex(b), [0, 0, 0], 0.65).join(',')})`;
       for (let i = 0; i < 22; i++) {
         const x = i * W / 20 + r() * 10 * S; g.beginPath(); g.moveTo(x, -5);
         g.bezierCurveTo(x + (r() - 0.5) * 30 * S, H * 0.3, x + (r() - 0.5) * 30 * S, H * 0.7, x + (r() - 0.5) * 20 * S, H + 5);
@@ -282,26 +302,48 @@ function vectorStyle(style: string, f: Finish, g: CanvasRenderingContext2D, W: n
       }
       break;
     }
-    case 'circuit': case 'neongrid': {
-      g.fillStyle = '#07090c'; g.fillRect(0, 0, W, H);
-      g.lineWidth = 1.6 * S; g.shadowBlur = 6 * S;
-      for (let i = 0; i < 70; i++) {
+    case 'circuit': case 'neongrid': { // светящиеся дорожки и узлы на тёмной плате (без квадратов)
+      const bg = mix(hex(b), [0, 0, 0], 0.75);
+      g.fillStyle = `rgb(${bg.join(',')})`; g.fillRect(0, 0, W, H);
+      g.strokeStyle = `rgba(${hex(a).join(',')},0.12)`; g.lineWidth = 1;
+      for (let x = 0; x < W; x += 10 * S) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
+      for (let y = 0; y < H; y += 10 * S) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+      g.lineWidth = 1.6 * S; g.shadowBlur = 8 * S; g.lineJoin = 'round';
+      for (let i = 0; i < 60; i++) {
         let x = Math.round(r() * 40) * W / 40, y = Math.round(r() * 12) * H / 12;
         const col = i % 3 ? a : c; g.strokeStyle = col; g.shadowColor = col; g.beginPath(); g.moveTo(x, y);
-        for (let k = 0; k < 5; k++) { if (r() < 0.5) x += (r() < 0.5 ? -1 : 1) * W / 20; else y += (r() < 0.5 ? -1 : 1) * H / 6; g.lineTo(x, y); }
-        g.stroke(); g.fillStyle = col; g.beginPath(); g.arc(x, y, 2.2 * S, 0, 7); g.fill();
+        for (let k = 0; k < 5; k++) { if (r() < 0.5) x += (r() < 0.5 ? -1 : 1) * W / 20; else { const d = (r() < 0.5 ? -1 : 1) * H / 6; x += d * 0.6; y += d; } g.lineTo(x, y); }
+        g.stroke(); g.fillStyle = col; g.beginPath(); g.arc(x, y, 2.4 * S, 0, 7); g.fill();
+        g.fillStyle = `rgb(${bg.join(',')})`; g.beginPath(); g.arc(x, y, 1.1 * S, 0, 7); g.fill();
       }
       break;
     }
-    case 'ornament': case 'halftone': {
-      g.fillStyle = b; g.fillRect(0, 0, W, H);
+    case 'ornament': { // орнамент-завитки поверх градиента
+      const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, b); gr.addColorStop(1, `rgb(${mix(hex(b), [0, 0, 0], 0.5).join(',')})`);
+      g.fillStyle = gr; g.fillRect(0, 0, W, H);
       const s = 14 * S;
       g.strokeStyle = a; g.lineWidth = 1.6 * S;
       for (let y = 0; y < H + s; y += s) for (let x = 0; x < W + s; x += s) {
-        if (style === 'halftone') { g.fillStyle = a; g.beginPath(); g.arc(x, y, s * 0.45 * (1 - x / W), 0, 7); g.fill(); continue; }
         g.beginPath(); g.arc(x, y, s * 0.42, 0, Math.PI); g.stroke();
         g.beginPath(); g.arc(x + s / 2, y + s / 2, s * 0.18, 0, 7); g.fillStyle = c; g.fill();
       }
+      break;
+    }
+    case 'halftone': { // растр: точки от плотных к редким поверх градиента, акцентная полоса
+      const gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, b); gr.addColorStop(1, a);
+      g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      const s = 6 * S;
+      g.fillStyle = `rgb(${mix(hex(b), [0, 0, 0], 0.55).join(',')})`;
+      for (let y = 0; y < H + s; y += s) for (let x = 0; x < W + s; x += s) {
+        const rr = s * 0.48 * Math.pow(1 - x / W, 1.3);
+        if (rr > 0.3) { g.beginPath(); g.arc(x + ((y / s) % 2 ? s / 2 : 0), y, rr, 0, 7); g.fill(); }
+      }
+      g.fillStyle = c; g.fillRect(0, H * 0.58, W, 4 * S);
+      break;
+    }
+    case 'solid': { // двухтонный лак с плавным переходом
+      const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, a); gr.addColorStop(0.55, a); gr.addColorStop(1, b);
+      g.fillStyle = gr; g.fillRect(0, 0, W, H);
       break;
     }
     case 'scales': { // драконья чешуя: ряды полукругов с градиентом и бликом
@@ -381,6 +423,16 @@ export function decals(g: CanvasRenderingContext2D, W: number, H: number, f: Fin
   }
 }
 
+let grain: HTMLCanvasElement | null = null;
+function grainTile() {
+  if (grain) return grain;
+  grain = document.createElement('canvas'); grain.width = grain.height = 128;
+  const g = grain.getContext('2d')!, img = g.createImageData(128, 128), r = mulberry32(99);
+  for (let i = 0; i < img.data.length; i += 4) { const v = 96 + r() * 64; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+  g.putImageData(img, 0, 0);
+  return grain;
+}
+
 // Финальная текстура: стиль + общая фактура (зерно, лёгкая виньетка)
 export function paintSkin(f: Finish, W: number, H: number, word = '', tier = 0): HTMLCanvasElement {
   const c = document.createElement('canvas'); c.width = W; c.height = H;
@@ -388,17 +440,29 @@ export function paintSkin(f: Finish, W: number, H: number, word = '', tier = 0):
   const r = mulberry32(f.seed ^ 0x5bd1e995);
   if (PIXEL.has(f.style)) g.putImageData(pixelStyle(f.style, f, W, H, r), 0, 0);
   else vectorStyle(f.style, f, g, W, H, r);
-  // зерно/фактура краски
-  const { fbm } = makeNoise(f.seed + 7);
-  const gr = g.getImageData(0, 0, W, H), d = gr.data;
-  for (let y = 0; y < H; y += 1) for (let x = 0; x < W; x += 1) {
-    const i = (y * W + x) * 4;
-    const n = fbm(x / W * 40, y / W * 40, 2) * 0.08;
-    d[i] = Math.max(0, Math.min(255, d[i] * (1 + n))); d[i + 1] = Math.max(0, Math.min(255, d[i + 1] * (1 + n))); d[i + 2] = Math.max(0, Math.min(255, d[i + 2] * (1 + n)));
-  }
-  g.putImageData(gr, 0, 0);
+  // зерно краски: готовая плитка шума поверх (быстро, без расчёта по каждому пикселю)
+  g.save(); g.globalCompositeOperation = 'overlay'; g.globalAlpha = 0.35;
+  g.fillStyle = g.createPattern(grainTile(), 'repeat')!; g.fillRect(0, 0, W, H);
+  g.restore();
+  finishPass(g, W, H, f, r, tier);
   decals(g, W, H, f, word, tier);
   return c;
+}
+
+// Отделка поверх любого стиля: светотень по высоте, окантовочные линии вдоль оружия
+function finishPass(g: CanvasRenderingContext2D, W: number, H: number, f: Finish, r: Rng, tier: number) {
+  const S = W / 200;
+  const sh = g.createLinearGradient(0, 0, 0, H);
+  sh.addColorStop(0, 'rgba(255,255,255,0.10)'); sh.addColorStop(0.45, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.22)');
+  g.fillStyle = sh; g.fillRect(0, 0, W, H);
+  if (tier >= 2 && !['camo', 'digital', 'splinter'].includes(f.style)) {
+    // тонкие линии-пинстрайпы в цвете акцента
+    const y = H * (0.25 + r() * 0.5);
+    g.strokeStyle = f.colors[2]; g.globalAlpha = 0.85; g.lineWidth = 0.9 * S;
+    g.beginPath(); g.moveTo(0, y); g.lineTo(W, y + (r() - 0.5) * 6 * S); g.stroke();
+    g.lineWidth = 0.45 * S; g.beginPath(); g.moveTo(0, y + 2.2 * S); g.lineTo(W, y + 2.2 * S + (r() - 0.5) * 6 * S); g.stroke();
+    g.globalAlpha = 1;
+  }
 }
 
 // Карта износа: 0 — краска цела, 1 — стёрта до металла (порог задаёт float в шейдере)

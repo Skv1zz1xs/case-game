@@ -90,9 +90,34 @@ const CURATED: [string, string, string][] = [
   ['#c77dff', '#10002b', '#e0aaff'], ['#00b4d8', '#03045e', '#90e0ef'], ['#f94144', '#277da1', '#f9c74f'], ['#ffd700', '#1c1c1c', '#c0c0c0'],
 ];
 const GOLD = '#d9a83a', CHROME = '#d5dbe3', BLACK = '#121316', GUNMETAL = '#3a3f48';
+// ——— Гармоничные палитры: от базового оттенка по правилам цвета ———
+const toHex = (h: number, sat: number, l: number) => {
+  h = ((h % 1) + 1) % 1;
+  const k = (n: number) => (n + h * 12) % 12, a = sat * Math.min(l, 1 - l);
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+  return '#' + [f(0), f(8), f(4)].map((x) => Math.round(x * 255).toString(16).padStart(2, '0')).join('');
+};
+const hueOf = (hex: string) => {
+  const v = hex.replace('#', ''); const r = parseInt(v.slice(0, 2), 16) / 255, g = parseInt(v.slice(2, 4), 16) / 255, b = parseInt(v.slice(4, 6), 16) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  if (!d) return 0;
+  const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return ((h / 6) + 1) % 1;
+};
+// схемы: близкие оттенки, противоположный, триада, сплит-комплемент
+const HARMONY = [[0, 0.06, -0.06], [0, 0.5, 0.04], [0, 0.333, 0.667], [0, 0.42, 0.58]];
+function harmonious(rng: Rng, baseHue: number): [string, string, string] {
+  const hm = HARMONY[Math.floor(rng() * HARMONY.length)];
+  const s1 = 0.65 + rng() * 0.3, s2 = 0.55 + rng() * 0.35, s3 = 0.7 + rng() * 0.25;
+  // основной — насыщенный средней яркости, второй — темнее, третий — светлый акцент
+  return [toHex(baseHue + hm[0], s1, 0.45 + rng() * 0.12), toHex(baseHue + hm[1], s2, 0.22 + rng() * 0.14), toHex(baseHue + hm[2], s3, 0.6 + rng() * 0.15)];
+}
+
 function makeScheme(rng: Rng, pal: string[], tier: number): Scheme {
   const pk = () => pal[Math.floor(rng() * pal.length)];
-  const secOpts = [BLACK, BLACK, GUNMETAL, pk(), pk()]; // белый на крупных деталях смотрится чужеродно
+  // второстепенные детали: глубокий тёмный оттенок основного цвета, графит или второй цвет палитры
+  const deep = toHex(hueOf(pal[0]), 0.35 + rng() * 0.3, 0.1 + rng() * 0.06);
+  const secOpts = [deep, deep, GUNMETAL, pal[1], BLACK];
   const accOpts = tier >= 5 ? [GOLD, CHROME, pk(), GOLD] : tier >= 3 ? [CHROME, pk(), GOLD, BLACK] : [BLACK, GUNMETAL, pk()];
   const sec = secOpts[Math.floor(rng() * secOpts.length)];
   const acc = accOpts[Math.floor(rng() * accOpts.length)];
@@ -129,8 +154,10 @@ export function buildCase(t: ThemeDef): CaseDef {
       const k = n === 1 ? 0.5 : i / (n - 1);
       const mult = r.min + (r.max - r.min) * k;
       const styles = PATTERNS_BY_TIER[tier];
-      const pal = rng() < 0.5 ? t.palette : CURATED[Math.floor(rng() * CURATED.length)];
-      const c = (j: number) => pal[(Math.floor(rng() * pal.length) + j) % pal.length];
+      // палитра скина: гармония от оттенка темы (иногда — от подобранной сочной палитры)
+      const baseHue = hueOf(rng() < 0.7 ? t.palette[Math.floor(rng() * t.palette.length)] : CURATED[Math.floor(rng() * CURATED.length)][0]) + (rng() - 0.5) * 0.06;
+      const pal = harmonious(rng, baseHue);
+      const c = (j: number) => pal[j % 3];
       skins.push({
         id: `${t.id}:${r.id}:${i}`,
         caseId: t.id,
@@ -138,7 +165,7 @@ export function buildCase(t: ThemeDef): CaseDef {
         skin: nameFor(tier),
         rarity: r.id,
         base: mult, // временно: множитель цены кейса
-        finish: { style: styles[Math.floor(rng() * styles.length)], colors: [c(0), c(1), c(2)], seed: Math.floor(rng() * 1e9), scheme: makeScheme(rng, pal, tier), tier },
+        finish: { style: styles[Math.floor(rng() * styles.length)], colors: [c(0), c(1), c(2)] as [string, string, string], seed: Math.floor(rng() * 1e9), scheme: makeScheme(rng, pal, tier), tier },
         phases: r.id === 'rare' ? makePhases(rng, PHASE_NAMES) : undefined,
       });
     });
