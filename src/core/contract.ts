@@ -1,5 +1,6 @@
 // Контракты: 10 предметов одной редкости → 1 следующей редкости из коллекций вложенного
-import { CONTRACT_SIZE, CONTRACT_PAYOUT_TABLE, RARITY_ORDER, RarityId, rarityIndex } from '../config/economy';
+import { CONTRACT_SIZE, CONTRACT_PAYOUT_TABLE, RARITY_ORDER, RarityId, rarityIndex, RECIPE_PAYOUT } from '../config/economy';
+import { matchRecipe, Recipe } from '../data/recipes';
 import { CASES, caseById, SkinDef } from '../data/cases';
 import { Item, round2 } from './items';
 import { Rng, weighted, randRange } from './rng';
@@ -32,6 +33,16 @@ export function contractValueRange(items: Item[]) {
 }
 
 export function rollContract(items: Item[], rng: Rng, ts: number): Item {
+  return rollContractEx(items, rng, ts).item;
+}
+
+export function rollContractEx(items: Item[], rng: Rng, ts: number): { item: Item; recipe?: Recipe } {
+  const sum0 = items.reduce((s, i) => s + i.price, 0);
+  const recipe = matchRecipe(items);
+  if (recipe) {
+    const it = itemWithPrice(recipe.skin, sum0 * randRange(rng, RECIPE_PAYOUT[0], RECIPE_PAYOUT[1]), rng, 'secret', ts);
+    return { item: { ...it, rarity: nextRarity(items[0].rarity) }, recipe };
+  }
   const odds = contractOdds(items);
   const caseId = weighted(rng, odds.map((o) => ({ ...o, weight: o.share }))).caseId;
   const c = caseById(caseId) ?? CASES[0];
@@ -40,5 +51,5 @@ export function rollContract(items: Item[], rng: Rng, ts: number): Item {
   const skin = list[Math.floor(rng() * list.length)];
   const sum = items.reduce((s, i) => s + i.price, 0);
   const row = weighted(rng, CONTRACT_PAYOUT_TABLE);
-  return itemWithPrice(skin, sum * randRange(rng, row.min, row.max), rng, 'contract', ts);
+  return { item: itemWithPrice(skin, sum * randRange(rng, row.min, row.max), rng, 'contract', ts) };
 }

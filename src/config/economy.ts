@@ -112,6 +112,9 @@ export const CONTRACT_PAYOUT_TABLE: { min: number; max: number; weight: number }
   { min: 1.9,  max: 3.5,  weight: 4.5 },
 ];
 
+// Секретный рецепт: эксклюзив стоит ×1.05–1.5 от вложенного
+export const RECIPE_PAYOUT: [number, number] = [1.05, 1.5];
+
 // Лента рулетки
 export const REEL_LENGTH = 60;     // клеток в ленте
 export const REEL_WIN_INDEX = 52;  // где лежит выигрыш

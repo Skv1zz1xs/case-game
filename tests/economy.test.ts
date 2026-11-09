@@ -105,3 +105,26 @@ describe('апгрейдер и контракты', () => {
     expect(outs / ins).toBeLessThan(1.0);
   });
 });
+
+describe('секретные рецепты', () => {
+  it('рецепт срабатывает и даёт эксклюзив дороже вложенного', async () => {
+    const { rollContractEx } = await import('../src/core/contract');
+    const rng = mulberry32(11);
+    const c = CASES.find((x) => x.id === 'skibidi')!;
+    const items = Array.from({ length: 10 }, () => openCase(c, rng, 0)).map((it) => ({ ...it, rarity: 'consumer' as const, st: false }));
+    const sum = items.reduce((s, i) => s + i.price, 0);
+    const r = rollContractEx(items, rng, 0);
+    expect(r.recipe?.id).toBe('throne');
+    expect(r.item.rarity).toBe('industrial');
+    expect(r.item.price).toBeGreaterThanOrEqual(Math.floor(sum * 1.05 * 100) / 100 - 0.01);
+  });
+  it('первое открытие рецепта записывается в профиль', () => {
+    const g = new Game(newProfile('r'), mulberry32(2), () => 0);
+    const c = CASES.find((x) => x.id === 'student')!;
+    const rng = mulberry32(4);
+    g.p.inventory = Array.from({ length: 10 }, () => ({ ...openCase(c, rng, 0), rarity: 'consumer' as const, st: false }));
+    const out = g.contractEx(g.p.inventory.map((i) => i.id));
+    expect(out.first).toBe(true);
+    expect(g.p.recipes).toContain('diploma');
+  });
+});

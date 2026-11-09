@@ -1,12 +1,13 @@
 // Состояние игрока и все действия экономики. Без React — используется и в UI, и в тестах.
 import * as E from '../config/economy';
-import { CaseDef, caseById, eventWindow } from '../data/cases';
+import { CaseDef, caseById, eventWindow, skinById } from '../data/cases';
 import { FREE_CASE_TABLE } from '../config/economy';
 import { FREE_SKINS } from '../data/free';
 import { Item, openCase, round2 } from './items';
 import { Rng, rand, uid, weighted, randRange } from './rng';
 import { rollUpgrade, targetAllowed, skinNear, itemWithPrice } from './upgrade';
-import { contractError, rollContract } from './contract';
+import { contractError, rollContractEx } from './contract';
+import type { Recipe } from '../data/recipes';
 
 export type AnimMode = 'full' | 'short' | 'off';
 
@@ -234,7 +235,7 @@ export class Game {
 
   // ——— апгрейдер ———
   // ставка: предметы из инвентаря + монеты; цель: сумма в монетах
-  upgrade(itemIds: string[], coins: number, target: number): { win: boolean; chance: number; roll: number; item?: Item } {
+  upgrade(itemIds: string[], coins: number, target: number, skinId?: string): { win: boolean; chance: number; roll: number; item?: Item } {
     const items = this.p.inventory.filter((i) => itemIds.includes(i.id));
     if (items.length !== itemIds.length) throw new Error('Предмет не найден');
     if (items.length > E.UPGRADE_MAX_ITEMS) throw new Error(`Не больше ${E.UPGRADE_MAX_ITEMS} предметов`);
@@ -250,7 +251,7 @@ export class Game {
     const res = rollUpgrade(stake, target, this.rng);
     let item: Item | undefined;
     if (res.win) {
-      item = itemWithPrice(skinNear(target, this.rng), target, this.rng, 'upgrade', t);
+      item = itemWithPrice((skinId && skinById(skinId)) || skinNear(target, this.rng), target, this.rng, 'upgrade', t);
       this.addItems([item]);
     }
     this.p.stats = { ...this.p.stats, upgrades: this.p.stats.upgrades + 1, upgradesWon: this.p.stats.upgradesWon + (res.win ? 1 : 0) };
@@ -261,18 +262,27 @@ export class Game {
 
   // ——— контракты ———
   contract(itemIds: string[]): Item {
+    return this.contractEx(itemIds).item;
+  }
+  contractEx(itemIds: string[]): { item: Item; recipe?: Recipe; first?: boolean } {
     const items = itemIds.map((id) => this.p.inventory.find((i) => i.id === id)).filter(Boolean) as Item[];
     const err = contractError(items);
     if (err) throw new Error(err);
     const set = new Set(itemIds);
     this.p.inventory = this.p.inventory.filter((i) => !set.has(i.id));
     this.p.showcase = this.p.showcase.filter((id) => !set.has(id));
-    const out = rollContract(items, this.rng, this.now());
+    const { item: out, recipe } = rollContractEx(items, this.rng, this.now());
     this.addItems([out]);
+    let first = false;
+    if (recipe && !this.p.recipes.includes(recipe.id)) {
+      first = true;
+      this.p.recipes = [...this.p.recipes, recipe.id];
+      this.notify({ kind: 'achievement', text: `Открыт секретный рецепт: «${recipe.name}»!` });
+    }
     this.p.stats = { ...this.p.stats, contracts: this.p.stats.contracts + 1 };
-    this.emit('contract', { items, out });
+    this.emit('contract', { items, out, recipe: recipe?.id });
     this.commit();
-    return out;
+    return { item: out, recipe, first };
   }
 
   setSettings(s: Partial<Settings>) { this.p.settings = { ...this.p.settings, ...s }; this.commit(); }

@@ -263,3 +263,40 @@ canvas.confetti { position: fixed; inset: 0; z-index: 75; pointer-events: none; 
 @media (max-width: 640px) { .case-head { grid-template-columns: 1fr; text-align: center; gap: 4px; } .case-head .cbox { max-width: 180px; margin: 0 auto; } }
 .back { color: var(--muted); font-weight: 700; padding: 6px 0; margin-bottom: 6px; }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; } }
+
+/* ——— апгрейдер ——— */
+.upg-layout { display: grid; grid-template-columns: 1fr minmax(260px, 340px) 1fr; gap: 14px; align-items: start; }
+@media (max-width: 960px) { .upg-layout { grid-template-columns: 1fr; } .upg-center { order: -1; } }
+.upg-side { padding: 14px; min-width: 0; }
+.upg-center { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.upg-slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.slot { min-height: 72px; border-radius: 12px; border: 1.5px dashed var(--line2); display: grid; place-items: center; color: var(--muted); font-weight: 700; font-size: 13px; background: rgba(255, 255, 255, 0.02); }
+.wheel { position: relative; width: min(78vw, 300px); aspect-ratio: 1; }
+.wheel svg { width: 100%; height: 100%; display: block; }
+.wheel .needle { position: absolute; inset: 0; pointer-events: none; }
+.wheel .needle div { position: absolute; left: 50%; top: 2%; width: 0; height: 0; transform: translateX(-50%); border-left: 11px solid transparent; border-right: 11px solid transparent; border-top: 26px solid #fff; filter: drop-shadow(0 0 6px #fff); }
+.wheel-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.wheel-center .pct { font-family: var(--font-h); font-size: clamp(26px, 8vw, 36px); font-weight: 900; }
+.wheel.win .pct { color: var(--good); text-shadow: 0 0 20px var(--good); }
+.wheel.lose { animation: reelshake 0.45s linear 1; }
+.wheel.lose .pct { color: var(--bad); }
+.upg-skins { max-height: 300px; overflow-y: auto; margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.upg-skin { display: flex; align-items: center; gap: 6px; padding: 9px 10px; border-radius: 10px; text-align: left; font-size: 13px; background: rgba(255, 255, 255, 0.03); border: 1px solid transparent; }
+.upg-skin.on { border-color: var(--accent); background: rgba(255, 176, 32, 0.08); }
+
+/* ——— контракты ——— */
+.contract-slots { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 520px) { .contract-slots { gap: 5px; } .contract-slots .slot { min-height: 54px; } }
+.contract-anim { position: relative; font-size: 90px; animation: pop 0.3s; }
+.contract-anim .paper { animation: paper 1.8s ease-in-out; }
+@keyframes paper { 0% { transform: scale(0.4) rotate(-20deg); } 40% { transform: scale(1.1) rotate(4deg); } 100% { transform: scale(1); } }
+.contract-anim .stamp { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-14deg); font-family: var(--font-h); font-size: 22px; font-weight: 900; color: #ff4d6d; border: 4px solid #ff4d6d; padding: 4px 10px; border-radius: 8px; opacity: 0; animation: stamp 1.8s forwards; white-space: nowrap; }
+@keyframes stamp { 0%, 55% { opacity: 0; transform: translate(-50%, -50%) rotate(-14deg) scale(3); } 70% { opacity: 1; transform: translate(-50%, -50%) rotate(-14deg) scale(1); } 100% { opacity: 1; transform: translate(-50%, -50%) rotate(-14deg) scale(1); } }
+.recipe-banner { margin-bottom: 12px; padding: 10px; border-radius: 12px; font-weight: 800; background: linear-gradient(90deg, rgba(255, 0, 229, 0.25), rgba(0, 229, 255, 0.25)); border: 1px solid rgba(255, 255, 255, 0.2); }
+.recipes { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.recipe { display: flex; gap: 12px; padding: 12px; align-items: center; }
+.recipe.open { border-color: rgba(255, 77, 255, 0.4); }
+.recipe-art { width: 84px; flex: none; display: grid; place-items: center; font-size: 34px; }
+.recipe-art svg { width: 100%; }
+.mode-card { padding: 18px; text-align: left; transition: transform 0.15s; }
+.mode-card:hover:not(:disabled) { transform: translateY(-2px); }

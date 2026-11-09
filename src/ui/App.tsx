@@ -8,6 +8,8 @@ import { BonusPage } from './pages/BonusPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { GamesPage } from './pages/GamesPage';
+import { UpgradePage } from './pages/UpgradePage';
+import { ContractPage } from './pages/ContractPage';
 import { SettingsModal } from './components/SettingsModal';
 import { useNow } from './components/Countdown';
 
@@ -21,9 +23,10 @@ const TABS: { id: Tab; ic: string; name: string }[] = [
 ];
 
 // Простой роутинг через hash: #/cases, #/case/<id>, #/bonus …
-function parse(): { tab: Tab; caseId?: string } {
+function parse(): { tab: Tab; caseId?: string; sub?: string } {
   const h = location.hash.replace(/^#\/?/, '').split('/');
   if (h[0] === 'case' && h[1]) return { tab: 'cases', caseId: h[1] };
+  if (h[0] === 'upgrade' || h[0] === 'contract') return { tab: 'games', sub: h[0] };
   if (TABS.some((t) => t.id === h[0])) return { tab: h[0] as Tab };
   return { tab: 'cases' };
 }
@@ -63,7 +66,9 @@ export function App() {
         {c ? <CasePage key={c.id} c={c} free={c.id === 'free'} onBack={() => go('cases')} />
           : route.tab === 'cases' ? <CasesPage onOpen={(id) => go('case/' + id)} onBonus={() => go('bonus')} />
           : route.tab === 'bonus' ? <BonusPage onFree={() => go('case/free')} />
-          : route.tab === 'games' ? <GamesPage />
+          : route.sub === 'upgrade' ? <UpgradePage onBack={() => go('games')} />
+          : route.sub === 'contract' ? <ContractPage onBack={() => go('games')} />
+          : route.tab === 'games' ? <GamesPage go={go} />
           : route.tab === 'inv' ? <InventoryPage />
           : <ProfilePage onSettings={() => setSettings(true)} />}
       </main>
