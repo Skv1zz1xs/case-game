@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="558" viewBox="0 12 404 110">
+  <rect x="0" y="12" width="404" height="110" fill="#1d1f26"/>
+  <path d="M8 52 L40 50 L120 56 L140 56 L140 76 L120 76 Q112 92 98 96 L80 96 Q72 82 50 84 L14 94 Q8 95 8 88 Z M86 66 Q98 62 110 70 Q104 84 92 84 Q82 80 86 66 Z" fill-rule="evenodd" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M5 52 L11 52 L13 94 L6 96 Q3 94 3 88 L3 56 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M136 54 L232 54 L232 76 L136 76 Z" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M150 28 L250 28 L250 40 L150 40 Z" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M250 24 L278 21 L278 47 L250 44 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M134 26 L150 28 L150 40 L134 42 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M166 40 L178 40 L178 54 L166 54 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M220 40 L232 40 L232 54 L220 54 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M196 70 L214 88 L210 92 L192 74 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M178 76 L200 76 L198 92 L180 92 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M152 76 L156 76 Q160 92 172 92 L176 92 L176 76 L180 76 L180 98 L170 98 Q152 98 148 80 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M232 56 L302 58 L302 72 L232 76 Z" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M300 60 L382 61 L382 68 L300 69 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+  <path d="M380 57 L398 57 L398 72 L380 72 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.6733333333333333"/>
+</svg>

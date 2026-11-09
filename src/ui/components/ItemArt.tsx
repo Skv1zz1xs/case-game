@@ -30,6 +30,10 @@ export function paint(f: Finish, id: string): { defs: ReactElement[]; body: Reac
   const defs: ReactElement[] = [];
   const body: ReactElement[] = [];
   const gid = `${id}g`;
+  if (f.image) {
+    body.push(<image key="img" href={((import.meta as any).env?.BASE_URL ?? './') + f.image} width="200" height="100" preserveAspectRatio="none" />);
+    return { defs, body };
+  }
   switch (f.style) {
     case 'solid':
       defs.push(<linearGradient key="g" id={gid} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={a} /><stop offset="1" stopColor={b} /></linearGradient>);

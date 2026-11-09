@@ -3,6 +3,7 @@
 // Превью рендерятся одним общим WebGL-контекстом в картинки и кешируются.
 import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -52,23 +53,41 @@ function geometryFor(key: string, art: Art) {
   return out;
 }
 
+// ——— модели из Blender (public/models/*.glb); если не загрузились — выдавливание из чертежа ———
+const gltf = new GLTFLoader();
+const glbCache = new Map<string, Promise<THREE.Object3D | null>>();
+function loadGlb(key: string): Promise<THREE.Object3D | null> {
+  const hit = glbCache.get(key);
+  if (hit) return hit;
+  const base = (import.meta as any).env?.BASE_URL ?? './';
+  const p = gltf.loadAsync(`${base}models/${key}.glb`).then((g) => g.scene).catch(() => null);
+  glbCache.set(key, p);
+  return p;
+}
+const MAT_NAMES: Mat[] = ['paint', 'metal', 'poly', 'dark', 'chrome'];
+const matOfName = (n: string): Mat => MAT_NAMES.find((m) => n.startsWith(m)) ?? 'metal';
+
 // ——— текстура скина ———
 const texCache = new Map<string, Promise<THREE.Texture>>();
 
 function skinTexture(art: Art, f: Finish, float: number, wearSeed: string): Promise<THREE.Texture> {
   const fb = Math.round(float * 10);
-  const key = `${f.style}|${f.colors.join()}|${f.seed}|${art.vb.join()}|${fb}|${fb >= 3 ? wearSeed : ''}`;
+  const key = `${f.image ?? f.style}|${f.colors.join()}|${f.seed}|${art.vb.join()}|${fb}|${fb >= 3 ? wearSeed : ''}`;
   const hit = texCache.get(key);
   if (hit) return hit;
   const p = (async () => {
-    const { defs, body } = paint(f, 't' + (f.seed % 100000));
     const W = 1024, H = Math.round((1024 * art.vb[3]) / art.vb[2]);
-    const svg = renderToStaticMarkup(
-      createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', width: W, height: H, viewBox: '0 0 200 100', preserveAspectRatio: 'none' },
-        createElement('defs', null, ...defs), ...body),
-    );
     const img = new Image();
-    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    if (f.image) {
+      img.src = ((import.meta as any).env?.BASE_URL ?? './') + f.image;
+    } else {
+      const { defs, body } = paint(f, 't' + (f.seed % 100000));
+      const svg = renderToStaticMarkup(
+        createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', width: W, height: H, viewBox: '0 0 200 100', preserveAspectRatio: 'none' },
+          createElement('defs', null, ...defs), ...body),
+      );
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
     await img.decode();
     const c = document.createElement('canvas');
     c.width = W; c.height = H;
@@ -90,10 +109,6 @@ function skinTexture(art: Art, f: Finish, float: number, wearSeed: string): Prom
     t.flipY = false;
     t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
     t.anisotropy = 4;
-    // UV торцов = координаты чертежа → растягиваем текстуру на рамку рисунка
-    const [vx, vy, vw, vh] = art.vb;
-    t.repeat.set(1 / vw, 1 / vh);
-    t.offset.set(-vx / vw, -vy / vh);
     return t;
   })();
   texCache.set(key, p);
@@ -119,14 +134,28 @@ export async function buildModel(model: WeaponModel, finish: Finish, o: ModelOpt
   const float = o.float ?? 0.08;
   const tex = await skinTexture(art, f, float, o.wearSeed ?? String(finish.seed));
   const g = new THREE.Group();
-  for (const p of geometryFor(key, art)) {
-    const mesh = new THREE.Mesh(p.geo, material(p.m, p.m === 'paint' ? tex : null, float));
-    g.add(mesh);
+  const glb = await loadGlb(key);
+  if (glb) {
+    // UV из Blender уже нормированы в рамку чертежа
+    const c = glb.clone(true);
+    c.traverse((o) => {
+      if (o instanceof THREE.Mesh) {
+        const m = matOfName(o.name || (o.material as THREE.Material)?.name || '');
+        o.material = material(m, m === 'paint' ? tex : null, float);
+      }
+    });
+    g.add(c);
+  } else {
+    // запасной вариант: выдавливание, UV = координаты чертежа
+    const [vx, vy, vw, vh] = art.vb;
+    const t2 = tex.clone(); t2.needsUpdate = true;
+    t2.repeat.set(1 / vw, 1 / vh); t2.offset.set(-vx / vw, -vy / vh);
+    for (const p of geometryFor(key, art)) g.add(new THREE.Mesh(p.geo, material(p.m, p.m === 'paint' ? t2 : null, float)));
   }
   // центр модели в начало координат
   const box = new THREE.Box3().setFromObject(g);
   const c = box.getCenter(new THREE.Vector3());
-  g.children.forEach((ch) => ch.position.sub(c));
+  g.position.sub(c);
   const wrap = new THREE.Group();
   wrap.add(g);
   wrap.userData.size = box.getSize(new THREE.Vector3());

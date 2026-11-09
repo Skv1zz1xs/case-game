@@ -7,9 +7,12 @@ import {
   WEAPONS, KNIVES, GLOVES, WeaponModel, PatternStyle, PATTERNS_BY_TIER, PHASE_NAMES,
 } from './weapons';
 import { THEMES, ThemeDef, GENERIC_NAMES, CaseCat } from './themes';
+import { CUSTOM_SKINS } from './customSkins';
+import { ALL_MODELS } from './weapons';
 
 export interface Finish {
   style: PatternStyle;
+  image?: string;        // свой скин-картинка (из Figma): путь от корня сайта, напр. 'skins/my.png'
   colors: [string, string, string];
   seed: number;
 }
@@ -129,6 +132,17 @@ export function buildCase(t: ThemeDef): CaseDef {
   for (const s of skins) s.base = s.base * scale;
   // Внутри редкости — от дешёвого к дорогому
   skins.sort((a, b) => b.base - a.base);
+
+  // Свои скины из Figma занимают место обычных той же редкости (цены не меняются)
+  const used = new Set<string>();
+  for (const cs of CUSTOM_SKINS.filter((x) => x.caseId === t.id)) {
+    const slot = skins.find((s) => s.rarity === cs.rarity && !used.has(s.id));
+    const model = ALL_MODELS.find((m) => m.id === cs.model);
+    if (!slot || !model) continue;
+    used.add(slot.id);
+    slot.model = model; slot.skin = cs.name;
+    slot.finish = { ...slot.finish, image: cs.image };
+  }
 
   return {
     id: t.id, name: t.name, price: t.price, cat: t.cat, rtp, glyph: t.glyph,

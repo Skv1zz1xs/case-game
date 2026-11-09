@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1103" viewBox="30 26 260 140">
+  <rect x="30" y="26" width="260" height="140" fill="#1d1f26"/>
+  <path d="M50 40 L268 40 Q274 40 274 46 L274 72 L50 72 Q46 72 46 66 L46 46 Q46 40 50 40 Z" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.43333333333333335"/>
+  <path d="M58 72 L270 72 L270 84 L182 84 L172 90 L58 90 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.43333333333333335"/>
+  <path d="M60 84 L120 84 L106 150 Q104 157 95 157 L54 157 Q45 157 47 149 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.43333333333333335"/>
+  <path d="M124 88 L130 88 Q130 112 152 112 L166 112 Q170 112 170 104 L170 88 L176 88 L176 108 Q176 118 166 118 L150 118 Q124 118 124 92 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.43333333333333335"/>
+  <path d="M140 90 L148 90 L150 106 L144 106 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.43333333333333335"/>
+  <path d="M262 34 L270 34 L270 40 L262 40 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.43333333333333335"/>
+  <path d="M52 34 L64 34 L64 40 L52 40 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.43333333333333335"/>
+</svg>

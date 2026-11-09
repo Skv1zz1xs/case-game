@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="610" viewBox="0 18 420 125">
+  <rect x="0" y="18" width="420" height="125" fill="#1d1f26"/>
+  <path d="M8 56 L68 52 L74 58 L74 74 L68 80 L14 94 Q6 96 6 88 L6 62 Q6 57 8 56 Z" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.7"/>
+  <path d="M70 60 L118 60 L118 72 L70 72 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.7"/>
+  <path d="M114 62 L210 62 L214 82 L118 82 Z" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.7"/>
+  <path d="M112 46 L222 46 L222 64 L112 64 Z" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.7"/>
+  <path d="M118 38 L206 38 L206 46 L118 46 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.7"/>
+  <path d="M136 82 L158 82 L150 118 Q148 124 140 123 L130 121 Q125 118 127 112 Z" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.7"/>
+  <path d="M160 82 L164 82 Q168 98 182 98 L186 98 L186 82 L190 82 L190 104 L180 104 Q160 104 156 86 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.7"/>
+  <path d="M176 82 L204 82 Q205 100 208 112 L184 116 Q179 100 176 82 Z" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.7"/>
+  <path d="M222 48 L290 48 Q294 48 294 52 L294 70 Q294 74 290 74 L222 74 Z" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.7"/>
+  <path d="M294 56 L312 56 L312 64 L294 64 Z" fill="#5a5f68" fill-opacity="0.6" stroke="#ff2d7a" stroke-width="0.7"/>
+  <path d="M310 50 L408 50 Q414 50 414 56 L414 64 Q414 70 408 70 L310 70 Z" fill="#ffffff" fill-opacity="1" stroke="#ff2d7a" stroke-width="0.7"/>
+</svg>
