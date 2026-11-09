@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
 /* ——— Тема v2: тёмная «сцена» с размытым фоном, бирюзовые акценты, серые плитки ——— */
 :root {
   --accent: #2de2d0;
@@ -7,22 +8,17 @@
   --panel: rgba(28, 31, 38, 0.82);
   --side-w: 224px;
   --head-h: 56px;
+  --font-h: 'Roboto Condensed', 'Arial Narrow', sans-serif;
+  --font: 'Roboto', system-ui, sans-serif;
 }
+body, button, input, select { font-family: var(--font); }
+h1, h2, h3, .topnav button, .section-h h2, .btn, .open-panel h2 { font-family: var(--font-h); }
 
 /* размытая «сцена» на фоне — своя: склад с бликами света */
 .backdrop {
-  position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(40% 30% at 18% 22%, rgba(255, 214, 160, 0.18), transparent 70%),
-    radial-gradient(30% 25% at 78% 18%, rgba(160, 200, 255, 0.14), transparent 70%),
-    radial-gradient(60% 40% at 50% 100%, rgba(90, 80, 70, 0.35), transparent 70%),
-    linear-gradient(180deg, #2a2d33 0%, #23252a 45%, #1c1d21 100%);
-  filter: saturate(0.9);
-}
-.backdrop::after {
-  content: ''; position: absolute; inset: 0;
-  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 80px, transparent 80px 220px);
-  filter: blur(18px);
+  position: fixed; inset: -20px; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(24, 26, 30, 0.55), rgba(24, 26, 30, 0.72)), var(--bg-img) center / cover no-repeat;
+  filter: blur(6px) saturate(0.85);
 }
 body { background: #1c1d21; }
 
@@ -143,3 +139,24 @@ body { background: #1c1d21; }
 .multi-grid .cell { display: flex; flex-direction: column; gap: 6px; animation: pop 0.35s both; }
 .multi-grid .cell .btn { min-height: 34px; font-size: 12px; background: #1d1f25; }
 @media (max-width: 520px) { .multi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* валюта: зелёный шестигранник */
+.coin { width: 1em; height: 1em; border-radius: 0; background: linear-gradient(180deg, #4ff0a0, #19b56a);
+  clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%); box-shadow: none; position: relative; }
+.coin::after { content: ''; position: absolute; inset: 28%; background: #0b3a24; clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%); }
+/* панели как в образце: полупрозрачный графит, почти без скруглений */
+.glass, .open-panel, .modal, .upg-side, .side { background: rgba(38, 40, 46, 0.86); backdrop-filter: blur(8px); }
+.glass { border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 3px; }
+.head { background: rgba(40, 42, 48, 0.94); }
+.main { padding-left: 24px; padding-right: 24px; }
+.topnav button { font-size: 17px; font-weight: 500; }
+.section-h h2 { font-weight: 400; font-size: 24px; letter-spacing: 0.02em; }
+.item { background: linear-gradient(180deg, #6b6f77 0%, #4a4e56 50%, #33363d 100%); }
+.item .nm { font-family: var(--font-h); }
+.case-card { background: linear-gradient(180deg, #7a7e86 0%, #565a62 60%, #42454c 100%); }
+.case-card .cinfo { background: rgba(58, 61, 68, 0.95); }
+.case-card .ttl { font-weight: 500; font-size: 12.5px; }
+.case-card .price { font-size: 12.5px; font-weight: 500; }
+.btn.primary, .btn.green { background: rgba(31, 150, 90, 0.35); border: 1px solid #2fd47a; box-shadow: 0 0 16px rgba(47, 212, 122, 0.25) inset; color: #7dffbd; }
+.btn.primary:hover:not(:disabled), .btn.green:hover:not(:disabled) { background: rgba(31, 170, 100, 0.5); }
+.btn { background: rgba(20, 22, 26, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); }

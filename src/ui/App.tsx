@@ -55,7 +55,7 @@ export function App() {
 
   return (
     <div className="app">
-      <div className="backdrop" aria-hidden />
+      <div className="backdrop" aria-hidden style={{ ['--bg-img' as any]: `url(${(import.meta as any).env?.BASE_URL ?? './'}bg.webp)` }} />
       <header className="head">
         <button className="logo" onClick={() => go('cases')}><span className="logo-ic">🎰</span><span className="full"><b>КЕЙС</b>-РОЯЛЬ</span></button>
         <div className="head-quick">
