@@ -89,10 +89,10 @@ const CURATED: [string, string, string][] = [
   ['#38b000', '#081c15', '#ccff33'], ['#ef476f', '#26547c', '#ffd166'], ['#9b5de5', '#00bbf9', '#fee440'], ['#ff595e', '#1982c4', '#8ac926'],
   ['#c77dff', '#10002b', '#e0aaff'], ['#00b4d8', '#03045e', '#90e0ef'], ['#f94144', '#277da1', '#f9c74f'], ['#ffd700', '#1c1c1c', '#c0c0c0'],
 ];
-const GOLD = '#d9a83a', CHROME = '#d5dbe3', BLACK = '#121316', WHITE = '#e9eaee', GUNMETAL = '#3a3f48';
+const GOLD = '#d9a83a', CHROME = '#d5dbe3', BLACK = '#121316', GUNMETAL = '#3a3f48';
 function makeScheme(rng: Rng, pal: string[], tier: number): Scheme {
   const pk = () => pal[Math.floor(rng() * pal.length)];
-  const secOpts = [BLACK, BLACK, GUNMETAL, WHITE, pk(), pk()];
+  const secOpts = [BLACK, BLACK, GUNMETAL, pk(), pk()]; // белый на крупных деталях смотрится чужеродно
   const accOpts = tier >= 5 ? [GOLD, CHROME, pk(), GOLD] : tier >= 3 ? [CHROME, pk(), GOLD, BLACK] : [BLACK, GUNMETAL, pk()];
   const sec = secOpts[Math.floor(rng() * secOpts.length)];
   const acc = accOpts[Math.floor(rng() * accOpts.length)];

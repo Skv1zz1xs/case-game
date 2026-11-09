@@ -43,7 +43,7 @@ export const FINISH_KIND: Record<string, number> = {
   anodized: 1, fade: 0.95, galaxy: 0.9, hologram: 1, damascus: 1, marble: 0.6, lava: 0.5, circuit: 0.7,
   carbon: 0.6, graphic: 0.5, flames: 0.55, retrowave: 0.55, beast: 0.5, splatter: 0.45, acid: 0.55, lowpoly: 0.6,
   neongrid: 0.6, ornament: 0.8, halftone: 0.4, tiger: 0.3, stripes: 0.35, camo: 0.1, digital: 0.15, solid: 0.4,
-  topo: 0.3, kintsugi: 0.7, scales: 0.85, honeycomb: 0.6, swirl: 0.75, splinter: 0.15,
+  topo: 0.3, crystal: 1, kintsugi: 0.7, scales: 0.85, honeycomb: 0.6, swirl: 0.75, splinter: 0.15,
 };
 
 // Повторяющиеся узоры красятся на каждой детали отдельно (со сдвигом), сюжетные — цельно
@@ -137,6 +137,22 @@ function pixelStyle(style: string, f: Finish, W: number, H: number, rng: Rng): I
           c = mix(c, [255, 255, 255], Math.pow(t, 18) * 0.6);
           break;
         }
+        case 'crystal': { // самоцвет: грани (ячейки Вороного) с бликами по краям граней
+          let d1 = 9, d2 = 9, id = 0;
+          const gx = u * 1.6, gy = v * 1.6, cx = Math.floor(gx), cy = Math.floor(gy);
+          for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+            const hx = cx + i, hy = cy + j;
+            const h = Math.sin(hx * 127.1 + hy * 311.7) * 43758.5453;
+            const px = hx + (h - Math.floor(h)), py = hy + ((h * 1.7) - Math.floor(h * 1.7));
+            const dd = (gx - px) ** 2 + (gy - py) ** 2;
+            if (dd < d1) { d2 = d1; d1 = dd; id = h - Math.floor(h); } else if (dd < d2) d2 = dd;
+          }
+          const edge = 1 - smooth(0.0, 0.08, Math.sqrt(d2) - Math.sqrt(d1));
+          c = ramp([B, A, C], id);
+          c = mix(c, [255, 255, 255], edge * 0.45);
+          c = mix(c, mix(A, [255, 255, 255], 0.3), Math.pow(1 - Math.sqrt(d1), 6) * 0.25);
+          break;
+        }
         case 'camo': { // многослойный камуфляж с рваными краями
           const l1 = fbm(u * 0.7, v * 0.7, 5), l2 = fbm(u * 0.7 + 50, v * 0.7, 5), l3 = fbm(u * 1.1 + 90, v * 1.1, 5);
           c = A;
@@ -155,7 +171,7 @@ function pixelStyle(style: string, f: Finish, W: number, H: number, rng: Rng): I
   return img;
 }
 
-const PIXEL = new Set(['fade', 'anodized', 'galaxy', 'marble', 'damascus', 'lava', 'acid', 'hologram', 'camo', 'topo', 'kintsugi', 'swirl']);
+const PIXEL = new Set(['fade', 'anodized', 'galaxy', 'marble', 'damascus', 'lava', 'acid', 'hologram', 'camo', 'topo', 'kintsugi', 'swirl', 'crystal']);
 
 // Векторные стили (рисунок поверх шумовой базы)
 function vectorStyle(style: string, f: Finish, g: CanvasRenderingContext2D, W: number, H: number, r: Rng) {
@@ -337,11 +353,12 @@ export function decals(g: CanvasRenderingContext2D, W: number, H: number, f: Fin
   const kinds = ['word', 'roundel', 'hazard', 'number'];
   for (let i = 0; i < n; i++) {
     const k = kinds[Math.floor(r() * kinds.length)];
-    const x = W * (0.12 + r() * 0.6), y = H * (0.3 + r() * 0.45);
+    // наклейки — в центральной зоне корпуса, где основные детали
+    const x = W * (0.22 + r() * 0.4), y = H * (0.42 + r() * 0.25);
     g.save(); g.translate(x, y); g.rotate((r() - 0.5) * 0.25);
     g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 3 * S;
     if (k === 'word' && word) {
-      g.font = `900 ${Math.round(11 * S)}px "Roboto Condensed", Arial Narrow, sans-serif`;
+      g.font = `900 ${Math.round(16 * S)}px "Roboto Condensed", Arial Narrow, sans-serif`;
       g.fillStyle = r() < 0.5 ? '#f4f4f4' : '#111';
       g.strokeStyle = c; g.lineWidth = 1.2 * S;
       g.fillText(word.toUpperCase(), 0, 0); g.strokeText(word.toUpperCase(), 0, 0);

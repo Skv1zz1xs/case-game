@@ -45,6 +45,7 @@ export function Inspect3D(p: Props) {
       const e = 1 - Math.pow(1 - k, 3);
       model.rotation.set(rx, ry + (1 - e) * Math.PI * 1.5, THUMB_POSE.z);
       model.scale.setScalar(0.4 + 0.6 * e);
+      model.traverse((o) => { if (o instanceof THREE.Mesh) { const ut = (o.material as THREE.Material).userData?.uTime; if (ut) ut.value = t / 1000; } });
       st.renderer.render(st.scene, st.camera);
     };
     raf = requestAnimationFrame(loop);

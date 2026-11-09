@@ -52,7 +52,7 @@ export const KIND_NAMES: Record<WeaponKind, string> = {
 // Узоры покраски (рисуются в ui/components/ItemArt.tsx)
 export type PatternStyle =
   | 'solid' | 'fade' | 'camo' | 'damascus' | 'carbon' | 'acid' | 'hologram'
-  | 'marble' | 'tiger' | 'digital' | 'stripes' | 'galaxy' | 'lava' | 'circuit' | 'anodized' | 'graphic' | 'flames' | 'retrowave' | 'lowpoly' | 'splatter' | 'beast' | 'halftone' | 'neongrid' | 'ornament' | 'topo' | 'kintsugi' | 'scales' | 'honeycomb' | 'swirl' | 'splinter';
+  | 'marble' | 'tiger' | 'digital' | 'stripes' | 'galaxy' | 'lava' | 'circuit' | 'anodized' | 'graphic' | 'flames' | 'retrowave' | 'lowpoly' | 'splatter' | 'beast' | 'halftone' | 'neongrid' | 'ornament' | 'topo' | 'kintsugi' | 'scales' | 'honeycomb' | 'swirl' | 'splinter' | 'crystal';
 
 // Чем выше редкость, тем «дороже» выглядит узор
 export const PATTERNS_BY_TIER: PatternStyle[][] = [
@@ -85,7 +85,7 @@ export const PHASE_PALETTES: Record<string, [string, string, string]> = {
   'Чёрная жемчужина': ['#311b92', '#0a0a12', '#b388ff'],
   'Огненный опал': ['#ff6d00', '#3e0a00', '#ffd180'],
   'Аметистовый глаз': ['#aa00ff', '#2a0040', '#ea80fc'],
-  'Сверхновая': ['#ffffff', '#ff00e5', '#00e5ff'],
+  'Сверхновая': ['#ff2bd6', '#2b0a5c', '#00e5ff'],
   'Око дракона': ['#ffea00', '#d50000', '#00c853'],
   'Абсолют': ['#00e5ff', '#6200ea', '#ffd600'],
 };
