@@ -1,0 +1,122 @@
+{
+ "ak": {
+  "name": "AK-47S",
+  "author": "Frostoise",
+  "profile": "https://sketchfab.com/Frostoise",
+  "url": "https://sketchfab.com/3d-models/ak-47s-07065c43bdb2459ca8faf7a99b075b9b",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "m4": {
+  "name": "Assault rifle M4A1",
+  "author": "bobeer",
+  "profile": "https://sketchfab.com/bobeer",
+  "url": "https://sketchfab.com/3d-models/assault-rifle-m4a1-1b858701dd7142d9b82bbe3fd121a97b",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "awp": {
+  "name": "FN Ballista Sniper Rifle",
+  "author": "Yevhen Avramenko",
+  "profile": "https://sketchfab.com/naprimerjenya",
+  "url": "https://sketchfab.com/3d-models/fn-ballista-sniper-rifle-49aa8bfa6efb4f0798708540cd4c9f4a",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "glock": {
+  "name": "Glock-17",
+  "author": "Nikitos",
+  "profile": "https://sketchfab.com/5Nikitos5",
+  "url": "https://sketchfab.com/3d-models/glock-17-aeb171380b2b490c80aa04b4ee1a9366",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "deagle": {
+  "name": "Desert Eagle",
+  "author": "ELIZION",
+  "profile": "https://sketchfab.com/ELIZION",
+  "url": "https://sketchfab.com/3d-models/desert-eagle-cabde59f5cf24effaf80536e35d04e95",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "mp7": {
+  "name": "H&K MP7 A1",
+  "author": "Steve Henry",
+  "profile": "https://sketchfab.com/Trinitite_Studio",
+  "url": "https://sketchfab.com/3d-models/hk-mp7-a1-27cd4b48fb14451c86adad4c559082d6",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "p90": {
+  "name": "Low-Poly FN P90",
+  "author": "TastyTony",
+  "profile": "https://sketchfab.com/TastyTony",
+  "url": "https://sketchfab.com/3d-models/low-poly-fn-p90-96b61ebbbf154843b621ebf7f48647fc",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "mac10": {
+  "name": "Mac 10 Sub Machine Gun",
+  "author": "iedalton",
+  "profile": "https://sketchfab.com/iedalton",
+  "url": "https://sketchfab.com/3d-models/mac-10-sub-machine-gun-8b87f75c6a474aaba5e66f71646ad517",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "nova": {
+  "name": "Remington 870 Shotgun",
+  "author": "Andrei Milin",
+  "profile": "https://sketchfab.com/milinam2002",
+  "url": "https://sketchfab.com/3d-models/remington-870-shotgun-6db0ad4764d14eee8f063eea3600071b",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "negev": {
+  "name": "LMG",
+  "author": "DJMaesen",
+  "profile": "https://sketchfab.com/bumstrum",
+  "url": "https://sketchfab.com/3d-models/lmg-8c24d7374ea64bdab1c30f49c69d5ed8",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "karambit": {
+  "name": "Karambit",
+  "author": "Diamonddogkz",
+  "profile": "https://sketchfab.com/Diamonddogkz",
+  "url": "https://sketchfab.com/3d-models/karambit-dfd7606f189a413681305a39b8841ce8",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "butterfly": {
+  "name": "Butterfly Knife NOX Balisong | НОКС Балисонг",
+  "author": "Frobin_G",
+  "profile": "https://sketchfab.com/frobin",
+  "url": "https://sketchfab.com/3d-models/butterfly-knife-nox-balisong-e2b7ed11b1b443c69bb6b3d7ce9aeed8",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "bayonet": {
+  "name": "M9 Bayonet knife",
+  "author": "Michael Karel",
+  "profile": "https://sketchfab.com/michaelkarel",
+  "url": "https://sketchfab.com/3d-models/m9-bayonet-knife-eb61a59f65e449d2a2eabbaef76a4a43",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "bowie": {
+  "name": "Bowie knife",
+  "author": "Redpool",
+  "profile": "https://sketchfab.com/skanda.vishwanath3",
+  "url": "https://sketchfab.com/3d-models/bowie-knife-793322ff35f9436b8c88fc56009c690e",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "stiletto": {
+  "name": "Stiletto",
+  "author": "re1monsen",
+  "profile": "https://sketchfab.com/re1monsen",
+  "url": "https://sketchfab.com/3d-models/stiletto-05c80a40e6754e0583ebce3bf285c545",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "ak": {
+  "flipx": true
+ },
+ "awp": {
+  "flipx": true
+ },
+ "bayonet": {
+  "flipx": true
+ },
+ "deagle": {
+  "flipx": true
+ },
+ "m4": {
+  "flipx": true
+ },
+ "mp7": {
+  "flipx": true
+ },
+ "negev": {
+  "flipx": true
+ },
+ "stiletto": {
+  "flipx": true
+ },
+ "butterfly": {
+  "roll": -38
+ },
+ "p90": {
+  "flipx": true
+ },
+ "mac10": {
+  "roll": -24
+ }
+}

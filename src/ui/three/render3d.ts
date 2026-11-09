@@ -127,8 +127,44 @@ function material(m: Mat, map: THREE.Texture | null, float: number): THREE.Mater
 
 export interface ModelOpts { phase?: string; float?: number; wearSeed?: string }
 
+// Реальные модели (Sketchfab, CC BY — авторы в CREDITS.md), подготовленные в Blender: public/models/real/<key>.glb
+const REAL: Record<string, string> = {
+  ak: 'ak', m4: 'm4', m4s: 'm4', awp: 'awp', glock: 'glock', deagle: 'deagle', usp: 'glock', mp7: 'mp7', p90: 'p90',
+  mac10: 'mac10', nova: 'nova', negev: 'negev', karambit: 'karambit', butterfly: 'butterfly', bayonet: 'bayonet',
+  bowie: 'bowie', stiletto: 'stiletto',
+};
+
+// Скин на реальной модели: боковая проекция по рамке модели, смешивается с родной текстурой (детали сохраняются)
+function skinnedMaterial(orig: THREE.MeshStandardMaterial, skin: THREE.Texture, box: THREE.Box3, float: number): THREE.Material {
+  const m = orig.clone();
+  m.metalness = Math.min(0.6, (orig.metalness ?? 0.3) + 0.1);
+  m.roughness = Math.min(1, (orig.roughness ?? 0.5) * 0.75 + float * 0.3);
+  const uMin = { value: new THREE.Vector2(box.min.x, box.min.y) };
+  const uSize = { value: new THREE.Vector2(box.max.x - box.min.x, box.max.y - box.min.y) };
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uSkin = { value: skin };
+    sh.uniforms.uMin = uMin; sh.uniforms.uSize = uSize;
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec2 vSkinUv;\nuniform vec2 uMin; uniform vec2 uSize;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSkinUv = vec2((position.x - uMin.x) / uSize.x, 1.0 - (position.y - uMin.y) / uSize.y);');
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying vec2 vSkinUv;\nuniform sampler2D uSkin;')
+      .replace('#include <map_fragment>', `#include <map_fragment>
+        float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+        vec3 sk = texture2D(uSkin, vSkinUv).rgb;
+        diffuseColor.rgb = sk * (0.45 + 1.35 * lum);`);
+  };
+  m.customProgramCacheKey = () => 'skin';
+  return m;
+}
+
 export async function buildModel(model: WeaponModel, finish: Finish, o: ModelOpts = {}): Promise<THREE.Group> {
   const key = model.art in ARTS ? model.art : 'ak';
+  const realKey = REAL[key];
+  if (realKey) {
+    const real = await loadGlb('real/' + realKey);
+    if (real) return buildReal(real, key, finish, o);
+  }
   const art = ARTS[key];
   const f: Finish = o.phase && PHASE_PALETTES[o.phase] ? { ...finish, colors: PHASE_PALETTES[o.phase] } : finish;
   const float = o.float ?? 0.08;
@@ -156,6 +192,33 @@ export async function buildModel(model: WeaponModel, finish: Finish, o: ModelOpt
   const box = new THREE.Box3().setFromObject(g);
   const c = box.getCenter(new THREE.Vector3());
   g.position.sub(c);
+  const wrap = new THREE.Group();
+  wrap.add(g);
+  wrap.userData.size = box.getSize(new THREE.Vector3());
+  return wrap;
+}
+
+async function buildReal(src: THREE.Object3D, key: string, finish: Finish, o: ModelOpts): Promise<THREE.Group> {
+  const art = ARTS[key];
+  const f: Finish = o.phase && PHASE_PALETTES[o.phase] ? { ...finish, colors: PHASE_PALETTES[o.phase] } : finish;
+  const float = o.float ?? 0.08;
+  const tex = await skinTexture(art, f, float, o.wearSeed ?? String(finish.seed));
+  const c = src.clone(true);
+  c.updateMatrixWorld(true);
+  // общая рамка всех частей (после Blender модель — один объект, части в одном пространстве)
+  const bb = new THREE.Box3();
+  c.traverse((m) => { if (m instanceof THREE.Mesh) { m.geometry.computeBoundingBox(); bb.union(m.geometry.boundingBox!); } });
+  c.traverse((m) => {
+    if (m instanceof THREE.Mesh) {
+      const mats = Array.isArray(m.material) ? m.material : [m.material];
+      const out = mats.map((mm) => skinnedMaterial(mm as THREE.MeshStandardMaterial, tex, bb, float));
+      m.material = Array.isArray(m.material) ? out : out[0];
+    }
+  });
+  const g = new THREE.Group();
+  g.add(c);
+  const box = new THREE.Box3().setFromObject(g);
+  g.position.sub(box.getCenter(new THREE.Vector3()));
   const wrap = new THREE.Group();
   wrap.add(g);
   wrap.userData.size = box.getSize(new THREE.Vector3());

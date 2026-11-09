@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { game, useProfile, toast } from '../game';
 import { newProfile, AnimMode } from '../../core/store';
 import { sfx } from '../sound';
+import CREDITS from '../../data/modelCredits.json';
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {
   const p = useProfile();
@@ -38,6 +39,15 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           <input className="input" maxLength={16} value={nick} onChange={(e) => setNick(e.target.value)} placeholder="Ник" />
           <button className="btn sm" disabled={nick.trim().length < 2 || nick === p.nick} onClick={() => { game.setNick(nick.trim()); toast('Ник сохранён', 'good'); }}>Сохранить</button>
         </div>
+        <details style={{ marginTop: 14 }}>
+          <summary className="small" style={{ cursor: 'pointer', fontWeight: 800 }}>Авторы 3D-моделей</summary>
+          <div className="small muted" style={{ lineHeight: 1.6, marginTop: 8 }}>
+            Модели оружия с Sketchfab по лицензии CC BY 4.0 (изменены: выровнены, упрощены, поверх — скины игры):
+            {Object.values(CREDITS as Record<string, { name: string; author: string; url: string }>).map((c) => (
+              <div key={c.url}>«{c.name}» — <a href={c.url} target="_blank" rel="noreferrer">{c.author}</a></div>
+            ))}
+          </div>
+        </details>
         <div style={{ marginTop: 16 }}>
           {!confirm ? <button className="btn danger sm" onClick={() => setConfirm(true)}>Сбросить прогресс</button> : (
             <div className="row"><span className="small grow">Точно? Всё удалится.</span>
