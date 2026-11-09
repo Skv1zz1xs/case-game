@@ -145,7 +145,7 @@ export function UpgradePage({ onContract }: { onBack?: () => void; onContract?: 
             {catalog.map((s) => (
               <div key={s.id} style={{ position: 'relative' }}>
                 <ItemCard skin={s} priceText={fmt(s.base)} selected={target?.id === s.id} onClick={() => { setState('idle'); setTarget(s); }} />
-                {stake > 0 && <span className="pct-badge" style={{ top: 'auto', bottom: 40, right: 8 }}>{(upgradeChance(stake, s.base) * 100).toFixed(1)}%</span>}
+                {stake > 0 && <span className="pct-badge">{(upgradeChance(stake, s.base) * 100).toFixed(1)}%</span>}
               </div>
             ))}
           </div>

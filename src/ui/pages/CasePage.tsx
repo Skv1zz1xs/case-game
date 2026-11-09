@@ -63,7 +63,6 @@ export function CasePage({ c, onBack, free }: { c: CaseDef; onBack: () => void; 
   };
 
   const tease = !!best && fxTier(best) >= 3 && p.settings.anim === 'full';
-  const compact = count > 1;
 
   const epic = !!result && !!best && fxTier(best) >= 3;
   const [epicOpen, setEpicOpen] = useState(false);
@@ -80,33 +79,35 @@ export function CasePage({ c, onBack, free }: { c: CaseDef; onBack: () => void; 
 
   return (
     <div>
-      <div className="case-stage">
+      <div className={`case-stage${(items && spinning) || result ? ' busy' : ''}`} style={{ ['--stage-img' as any]: `url(${new URL(((import.meta as any).env?.BASE_URL ?? './') + 'stage.webp', location.href).href})` }}>
         <button className="btn sm stage-back" onClick={onBack}>← К кейсам</button>
-        <button className="btn sm odds-btn" onClick={() => setShowOdds(true)}>Шансы призов</button>
-        {result && !spinning ? (
-          <div className="multi-grid" style={{ marginTop: 44 }}>
+        <div className="stage-logo">🎰 КЕЙС-РОЯЛЬ</div>
+        <button className={`stage-snd${p.settings.sound ? '' : ' off'}`} title="Звук" onClick={() => game.setSettings({ sound: !p.settings.sound })}>{p.settings.sound ? '🔊' : '🔇'}</button>
+        <CaseImg c={c} className="big-case" />
+        {items && spinning && (
+          <div className={`reel-grid n${items.length}`}>
+            {items.map((it, i) => (
+              <Reel key={i} c={c} winner={it} spinKey={spinKey} fast={fast} compact={items.length > 1}
+                sound={i === 0 && p.settings.sound} tease={tease && it === best} onDone={onReelDone} />
+            ))}
+          </div>
+        )}
+        {result && !spinning && (
+          <div className={`drop-grid n${result.length}`}>
             {result.map((it) => (
               <div className="cell" key={it.id}>
                 <ItemCard item={it} />
                 {inInv.has(it.id)
-                  ? <button className="btn" onClick={(e) => sellOne(it, e.currentTarget)}>Продать <i className="coin" /> {fmt(it.price)}</button>
-                  : <button className="btn" disabled>Продано</button>}
+                  ? <button className="btn sell-btn" onClick={(e) => sellOne(it, e.currentTarget)}>Продать {fmt(it.price)} <i className="coin" /></button>
+                  : <button className="btn sell-btn" disabled>Продано</button>}
               </div>
             ))}
           </div>
-        ) : items && spinning ? (
-          <div style={{ display: 'grid', gap: 8, width: '100%', marginTop: 44 }}>
-            {items.map((it, i) => (
-              <Reel key={i} c={c} winner={it} spinKey={spinKey} fast={fast} compact={compact}
-                sound={i === 0 && p.settings.sound} tease={tease && it === best} onDone={onReelDone} />
-            ))}
-          </div>
-        ) : (
-          <CaseImg c={c} className="big-case" />
         )}
       </div>
 
       <div className="open-panel">
+        <button className="btn sm odds-btn" onClick={() => setShowOdds(true)}>Шансы призов</button>
         <h2>{c.name}</h2>
         {c.cat === 'event' && avail && (
           <div className="small" style={{ color: 'var(--accent)', fontWeight: 800 }}>
@@ -116,32 +117,30 @@ export function CasePage({ c, onBack, free }: { c: CaseDef; onBack: () => void; 
           </div>
         )}
         <div className="open-row">
-          {!free && (
+          {!free ? (
             <select className="count-select" value={n} disabled={spinning} onChange={(e) => { setN(Number(e.target.value)); setItems(null); setResult(null); }} aria-label="Сколько открыть">
-              {COUNTS.map((k) => <option key={k} value={k}>Открыть за раз: {k}</option>)}
+              {COUNTS.map((k) => <option key={k} value={k}>ОТКРЫТЬ ЗА РАЗ {k}</option>)}
             </select>
-          )}
+          ) : <div className="count-select" style={{ display: 'grid', placeItems: 'center' }}>ОТКРЫТЬ ЗА РАЗ 1</div>}
           <button className={`bolt${fast ? ' on' : ''}`} title="Быстрое открытие" onClick={() => game.setSettings({ fast: !fast })}>⚡</button>
-          <button className="btn primary lg" onClick={open} disabled={!!err || spinning}>
-            {spinning ? 'Крутим…' : free ? 'Открыть бесплатно' : <>Открыть · <i className="coin" />{fmt(c.price * count)}</>}
-          </button>
+          {spinning
+            ? <button className="btn primary open-btn" onClick={() => setDone(items?.length ?? 0)}>Пропустить анимацию</button>
+            : <button className="btn primary open-btn" onClick={open} disabled={!!err}>
+                {free ? 'Открыть бесплатно' : <>Открыть за {fmt(c.price * count)} <i className="coin" /></>}
+              </button>}
         </div>
         {err && !spinning && <div className="muted small">{err}</div>}
-        {result && result.length > 1 && !spinning && (
-          <div className="open-row">
-            <span className="small">Итого <b><i className="coin" /> {fmt(sum)}</b>
-              {!free && <span style={{ marginLeft: 6, color: sum >= c.price * result.length ? 'var(--good)' : 'var(--bad)' }}>({sum >= c.price * result.length ? '+' : ''}{fmt(sum - c.price * result.length)})</span>}</span>
-            <button className="btn" onClick={sellAll} disabled={!result.some((i) => inInv.has(i.id))}>Продать всё</button>
-          </div>
+        {spinning && count > 1 && <div className="small" style={{ color: 'var(--good)' }}>ВСЕ {count} СЛОТОВ ОТКРЫТЫ · {free ? 'БЕСПЛАТНО' : `${fmt(c.price * count)}`}</div>}
+        {result && result.length > 1 && !spinning && result.some((i) => inInv.has(i.id)) && (
+          <button className="btn" onClick={sellAll}>Продать всё {fmt(round2(result.filter((i) => inInv.has(i.id)).reduce((a, i) => a + i.price, 0)))} <i className="coin" /></button>
         )}
       </div>
 
-      <div className="section" style={{ marginTop: 18 }}>
+      <div className="section case-items">
         <div className="item-grid">
           {byChance.map(({ s, pct }) => (
             <div key={s.id} style={{ position: 'relative' }}>
-              <ItemCard skin={s} priceText={fmt(s.base)} />
-              <span className="pct-badge" style={{ top: 'auto', bottom: 44, right: 10 }}>{pct < 0.01 ? pct.toFixed(4) : pct.toFixed(3)}%</span>
+              <ItemCard skin={s} corner={`${pct < 0.01 ? pct.toFixed(4) : pct.toFixed(3)}%`} />
             </div>
           ))}
         </div>

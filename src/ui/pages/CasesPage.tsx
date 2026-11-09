@@ -6,20 +6,21 @@ import { CaseImg } from '../components/CaseImg';
 import { FREE_CASE } from '../../data/free';
 import { useNow, Countdown } from '../components/Countdown';
 
-const CATS: (CaseCat | 'all')[] = ['all', 'event', 'cheap', 'theme', 'knife', 'mid', 'elite'];
 
 export function CasesPage({ onOpen, onBonus }: { onOpen: (id: string) => void; onBonus: () => void }) {
   const p = useProfile();
   const now = useNow(1000);
-  const [cat, setCat] = useState<CaseCat | 'all'>('all');
+  const [cat] = useState<CaseCat | 'all'>('all');
+  const [q, setQ] = useState('');
   const freeLeft = p.freeAt - now;
   const daily = game.dailyState();
   const order: CaseCat[] = ['event', 'cheap', 'theme', 'knife', 'mid', 'elite'];
   const shown = (cat === 'all' ? order : [cat]);
 
   return (
-    <div>
-      <div className="section">
+    <div className="cases-page">
+      <div className="case-search"><span>⌕</span><input placeholder="поиск…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+      {!q && <div className="section">
         <div className="section-h"><h2>Бесплатные кейсы</h2></div>
         <div className="case-grid">
           <button className="case-card" style={{ ['--c1' as any]: FREE_CASE.palette[0] }} onClick={() => onOpen('free')}>
@@ -33,14 +34,12 @@ export function CasesPage({ onOpen, onBonus }: { onOpen: (id: string) => void; o
               <div className="price" style={{ color: daily.claimed ? undefined : 'var(--good)' }}>{daily.claimed ? `стрик ${daily.streak} дн.` : `+${fmt(daily.amount)} · ЗАБРАТЬ`}</div></div>
           </button>
         </div>
-      </div>
+      </div>}
 
-      <div className="chips section">
-        {CATS.map((c) => <button key={c} className={`chip${cat === c ? ' on' : ''}`} onClick={() => setCat(c)}>{c === 'all' ? 'Все' : CAT_NAMES[c]}</button>)}
-      </div>
 
       {shown.map((k) => {
-        const list = CASES.filter((c) => c.cat === k);
+        const list = CASES.filter((c) => c.cat === k && (!q || c.name.toLowerCase().includes(q.toLowerCase())));
+        if (!list.length) return null;
         return (
           <div className="section" key={k}>
             <div className="section-h"><h2>{CAT_NAMES[k]}</h2><span className="muted small">{list.length}</span></div>
@@ -51,7 +50,8 @@ export function CasesPage({ onOpen, onBonus }: { onOpen: (id: string) => void; o
                 return (
                   <button key={c.id} className="case-card" style={{ ['--c1' as any]: c.palette[0], opacity: ev && !ev.active ? 0.55 : 1 }} onClick={() => onOpen(c.id)}>
                     {ev && <span className={`badge${ev.active ? ' hot' : ''}`}>{ev.active ? <>⏳ <Countdown to={ev.end} now={now} /></> : <>🔒 <Countdown to={ev.start} now={now} /></>}</span>}
-                    {c.cat === 'elite' && <span className="badge">ЭЛИТ</span>}
+                    {c.cat === 'elite' && <span className="badge vip">ЭЛИТ</span>}
+                    {(c.cat === 'theme' || c.cat === 'knife') && c.price >= 40 && c.price <= 900 && <span className="badge new">НОВОЕ</span>}
                     <div className="cimg"><CaseImg c={c} /><span className="glyph-badge">{c.glyph}</span></div>
                     <div className="cinfo">
                       <div className="ttl">{c.name}</div>

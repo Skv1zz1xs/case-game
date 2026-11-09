@@ -27,3 +27,6 @@
 ## Фактуры (Poly Haven, CC0)
 Микрофактуры под краской скинов — с https://polyhaven.com (лицензия CC0, указание авторов не обязательно, но оставляем):
 metal_plate, marble_01, brown_leather, american_walnut_veneer, green_metal_rust. Подробности — public/tex/credits.json.
+
+## Фон
+Фото-фон страницы кейса и общий размытый фон — кадр из HDRI-панорамы «Urban Street 04» с Poly Haven (CC0), отрендерен в Blender.

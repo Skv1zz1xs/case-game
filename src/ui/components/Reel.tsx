@@ -41,7 +41,7 @@ export function Reel({ c, winner, spinKey, fast, compact, sound = true, tease, s
   const [state, setState] = useState<'idle' | 'spin' | 'done'>('idle');
   const fillSeed = useMemo(() => seed ?? randomSeed(), [spinKey, seed]);
   const cells = useMemo(() => fillerSkins(c, REEL_LENGTH, fillSeed), [c, fillSeed]);
-  const cellW = Math.round(Math.max(compact ? 84 : 104, Math.min(compact ? 120 : 170, w / (compact ? 5 : 4.2))));
+  const cellW = Math.round(Math.max(compact ? 96 : 104, Math.min(compact ? 220 : 200, w / (compact ? 2.4 : 4.2))));
 
   useLayoutEffect(() => {
     const el = wrap.current; if (!el) return;
@@ -54,8 +54,14 @@ export function Reel({ c, winner, spinKey, fast, compact, sound = true, tease, s
     if (!winner || !strip.current) return;
     const el = strip.current;
     const r = mulberry32(fillSeed ^ 0x9e3779b9);
-    const offset = (r() - 0.5) * 0.76 * cellW;
-    const target = REEL_WIN_INDEX * cellW + cellW / 2 - w / 2 + offset;
+    const offK = (r() - 0.5) * 0.76;
+    // цель считаем по реальным размерам на каждом кадре: при первом показе ширина ещё не измерена
+    const targetNow = () => {
+      const cell = el.children[REEL_WIN_INDEX] as HTMLElement | undefined;
+      const ww = wrap.current?.clientWidth ?? w;
+      if (!cell) return 0;
+      return cell.offsetLeft + cell.offsetWidth / 2 - ww / 2 + offK * cell.offsetWidth;
+    };
     const dur = (fast ? SPIN_FAST_MS : SPIN_MS) + (tease && !fast ? 1700 : 0);
     const pow = tease && !fast ? 5.2 : 4;
     const t0 = performance.now();
@@ -64,9 +70,10 @@ export function Reel({ c, winner, spinKey, fast, compact, sound = true, tease, s
     const step = (t: number) => {
       const k = Math.min(1, (t - t0) / dur);
       const e = 1 - Math.pow(1 - k, pow);
-      const x = target * e;
+      const x = targetNow() * e;
       el.style.transform = `translate3d(${-x}px,0,0)`;
-      const cell = Math.floor((x + w / 2) / cellW);
+      const cw = (el.children[0] as HTMLElement | undefined)?.offsetWidth || cellW;
+      const cell = Math.floor((x + (wrap.current?.clientWidth ?? w) / 2) / cw);
       if (cell !== lastCell) {
         lastCell = cell;
         if (sound && t - lastTick > 28) { sfx.tick(); lastTick = t; }
