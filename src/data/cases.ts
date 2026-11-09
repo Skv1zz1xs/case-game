@@ -4,7 +4,7 @@ import {
 } from '../config/economy';
 import { mulberry32, hashStr, Rng } from '../core/rng';
 import {
-  WEAPONS, KNIVES, GLOVES, STICKER, WeaponModel, PatternStyle, PATTERNS_BY_TIER, PHASE_NAMES,
+  WEAPONS, KNIVES, GLOVES, STICKER, CHARM, WeaponModel, PatternStyle, PATTERNS_BY_TIER, PHASE_NAMES,
 } from './weapons';
 import { THEMES, ThemeDef, GENERIC_NAMES, CaseCat } from './themes';
 import { CUSTOM_SKINS } from './customSkins';
@@ -150,6 +150,8 @@ export function buildCase(t: ThemeDef): CaseDef {
       models = pickN(rng, WEAPONS, n);
       // до армейского — часть предметов наклейки (разнообразие, как в настоящих кейсах)
       if (tier <= 3) models = models.map((m, j) => (j === 0 || (j === 1 && rng() < 0.4) ? STICKER : m));
+      // брелоки — среди армейских и запрещённых
+      if (tier === 2 || tier === 3) models = models.map((m, j) => (j === n - 1 && rng() < 0.6 ? CHARM : m));
     }
     models.forEach((model, i) => {
       // Базовые множители ровно распределены по диапазону редкости

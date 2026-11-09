@@ -12,7 +12,7 @@ interface Props { model: WeaponModel; finish: Finish; phase?: string; float?: nu
 export function Inspect3D(p: Props) {
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!webglOk || !box.current || p.model.kind === 'sticker') return;
+    if (!webglOk || !box.current || (p.model.kind === 'sticker' || p.model.kind === 'charm')) return;
     const el = box.current;
     const canvas = document.createElement('canvas');
     el.prepend(canvas);
@@ -69,7 +69,7 @@ export function Inspect3D(p: Props) {
       st.renderer.dispose(); canvas.remove();
     };
   }, [p.model.id, p.finish.seed, p.phase, p.float, p.wearSeed]);
-  if (p.model.kind === 'sticker') return <div className="inspect"><StickerArt finish={p.finish} name={p.finish.word ?? ''} big /></div>;
+  if (p.model.kind === 'sticker' || p.model.kind === 'charm') return <div className="inspect"><StickerArt finish={p.finish} name={p.finish.word ?? ''} big charm={p.model.kind === 'charm'} /></div>;
   if (!webglOk) return <ItemArt {...p} />;
   return <div ref={box} className="inspect" style={p.color ? { filter: `drop-shadow(0 6px 18px ${p.color}55)` } : undefined}><span className="hint">↔ покрути</span></div>;
 }

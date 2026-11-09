@@ -33,7 +33,7 @@ export function Sidebar({ go }: { go: (p: string) => void }) {
               <div className="feed-img"><ItemView model={s.model} finish={s.finish} float={e.item.float} wearSeed={e.item.id}
                 phase={e.item.pattern?.tier !== 'normal' ? e.item.pattern?.name : undefined} /></div>
               <div className="feed-txt">
-                <b>{e.item.st ? 'ST™ ' : ''}{s.model.kind === 'knife' || s.model.kind === 'gloves' ? '★ ' : ''}{s.model.name}</b>
+                <b>{e.item.st && s.model.kind !== 'sticker' && s.model.kind !== 'charm' ? 'ST™ ' : ''}{s.model.kind === 'knife' || s.model.kind === 'gloves' ? '★ ' : ''}{s.model.name}</b>
                 <span className="muted">{s.skin}</span>
                 <span><i className="coin" /> {fmt(e.item.price)}</span>
                 <span className="feed-nick">{e.nick} · {e.src}</span>

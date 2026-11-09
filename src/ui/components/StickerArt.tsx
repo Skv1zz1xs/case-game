@@ -6,8 +6,8 @@ import { mulberry32 } from '../../core/rng';
 
 const cache = new Map<string, string>();
 
-function draw(f: Finish, name: string): string {
-  const key = `${f.seed}|${f.colors.join()}|${f.tier ?? 0}|${name}`;
+function draw(f: Finish, name: string, charm = false): string {
+  const key = `${f.seed}|${f.colors.join()}|${f.tier ?? 0}|${name}|${charm}`;
   const hit = cache.get(key);
   if (hit) return hit;
   const W = 360, H = 260;
@@ -25,9 +25,21 @@ function draw(f: Finish, name: string): string {
   else if (kind === 'emblem') { for (let i = 0; i < 12; i++) { const an = -Math.PI / 2 + i * Math.PI / 6, rr = i % 2 ? 92 : 112; if (i) shape.lineTo(cx + Math.cos(an) * rr, cy + Math.sin(an) * rr); else shape.moveTo(cx + Math.cos(an) * rr, cy + Math.sin(an) * rr); } shape.closePath(); }
   else shape.ellipse(cx, cy, 118, 104, 0, 0, Math.PI * 2);
 
-  // белая вырубка с тенью
-  g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 14; g.shadowOffsetY = 6;
-  g.lineJoin = 'round'; g.strokeStyle = '#fbfbf8'; g.lineWidth = 22; g.stroke(shape); g.fillStyle = '#fbfbf8'; g.fill(shape); g.restore();
+  if (charm) {
+    // кольцо и цепочка сверху, рисунок — подвеска ниже
+    const gold = tier >= 3;
+    const met = (y0: number, y1: number) => { const m = g.createLinearGradient(0, y0, 0, y1); m.addColorStop(0, gold ? '#fff2b0' : '#f4f6f8'); m.addColorStop(0.5, gold ? '#c99a2e' : '#8e98a4'); m.addColorStop(1, gold ? '#7a5a12' : '#4b525c'); return m; };
+    g.lineWidth = 7; g.strokeStyle = met(0, 40);
+    g.beginPath(); g.arc(cx, 22, 15, 0, 7); g.stroke();
+    for (let i = 0; i < 3; i++) { g.beginPath(); g.ellipse(cx, 46 + i * 15, 5, 9, 0, 0, 7); g.lineWidth = 4; g.stroke(); }
+    g.setTransform(0.62, 0, 0, 0.62, cx * 0.38, 96);
+    g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 16; g.shadowOffsetY = 8;
+    g.lineJoin = 'round'; g.strokeStyle = met(10, 250); g.lineWidth = 26; g.stroke(shape); g.restore();
+  } else {
+    // белая вырубка с тенью
+    g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 14; g.shadowOffsetY = 6;
+    g.lineJoin = 'round'; g.strokeStyle = '#fbfbf8'; g.lineWidth = 22; g.stroke(shape); g.fillStyle = '#fbfbf8'; g.fill(shape); g.restore();
+  }
   g.save(); g.clip(shape);
 
   const grd = g.createLinearGradient(0, 0, W, H); grd.addColorStop(0, b); grd.addColorStop(1, a);
@@ -82,12 +94,16 @@ function draw(f: Finish, name: string): string {
   const sh = g.createLinearGradient(0, 0, W, H * 0.7); sh.addColorStop(0.3, 'rgba(255,255,255,0)'); sh.addColorStop(0.45, 'rgba(255,255,255,.35)'); sh.addColorStop(0.55, 'rgba(255,255,255,0)');
   g.fillStyle = sh; g.fillRect(0, 0, W, H);
   g.restore();
+  if (charm) { // эмалевый блик по ободу
+    g.save(); g.clip(shape); const gl = g.createRadialGradient(cx - 40, cy - 50, 5, cx - 40, cy - 50, 120); gl.addColorStop(0, 'rgba(255,255,255,.45)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gl; g.fillRect(0, 0, W, H); g.restore();
+  }
+  g.setTransform(1, 0, 0, 1, 0, 0);
   const url = c.toDataURL('image/png');
   cache.set(key, url);
   return url;
 }
 
-export const StickerArt = memo(function StickerArt({ finish, name, big }: { finish: Finish; name: string; big?: boolean }) {
-  const url = useMemo(() => draw(finish, name), [finish.seed, finish.tier, name]);
-  return <div className={`art3d sticker${big ? ' big' : ''}`}><img src={url} alt="" draggable={false} /></div>;
+export const StickerArt = memo(function StickerArt({ finish, name, big, charm }: { finish: Finish; name: string; big?: boolean; charm?: boolean }) {
+  const url = useMemo(() => draw(finish, name, charm), [finish.seed, finish.tier, name, charm]);
+  return <div className={`art3d sticker${charm ? ' charm' : ''}${big ? ' big' : ''}`}><img src={url} alt="" draggable={false} /></div>;
 });

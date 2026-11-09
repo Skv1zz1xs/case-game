@@ -11,12 +11,12 @@ interface Props { model: WeaponModel; finish: Finish; color?: string; phase?: st
 export const ItemView = memo(function ItemView(p: Props) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
-    if (!webglOk || p.model.kind === 'sticker') return;
+    if (!webglOk || (p.model.kind === 'sticker' || p.model.kind === 'charm')) return;
     let alive = true;
     renderThumb(p.model, p.finish, { phase: p.phase, float: p.float, wearSeed: p.wearSeed }).then((u) => { if (alive) setUrl(u); });
     return () => { alive = false; };
   }, [p.model.id, p.finish.seed, p.finish.style, p.phase, p.float, p.wearSeed]);
-  if (p.model.kind === 'sticker') return <StickerArt finish={p.finish} name={p.finish.word ?? ''} />;
+  if (p.model.kind === 'sticker' || p.model.kind === 'charm') return <StickerArt finish={p.finish} name={p.finish.word ?? ''} charm={p.model.kind === 'charm'} />;
   if (!url) return <ItemArt {...p} />;
   return (
     <div className={`art3d${p.gem ? ' gem' : ''}`} style={p.color ? { filter: `drop-shadow(0 4px 10px ${p.color}66)` } : undefined}>

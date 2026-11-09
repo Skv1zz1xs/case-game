@@ -29,7 +29,7 @@ export function CasesPage({ onOpen, onBonus }: { onOpen: (id: string) => void; o
               <div className="price" style={{ color: 'var(--good)' }}>{freeLeft > 0 ? <>через <Countdown to={p.freeAt} now={now} /></> : 'БЕСПЛАТНО'}</div></div>
           </button>
           <button className="case-card" onClick={onBonus}>
-            <div className="cimg" style={{ fontSize: 64 }}>📅</div>
+            <div className="cimg"><CaseImg c={{ ...FREE_CASE, id: 'daily', name: 'Награда дня' }} /></div>
             <div className="cinfo"><div className="ttl">Ежедневная награда</div>
               <div className="price" style={{ color: daily.claimed ? undefined : 'var(--good)' }}>{daily.claimed ? `стрик ${daily.streak} дн.` : `+${fmt(daily.amount)} · ЗАБРАТЬ`}</div></div>
           </button>
