@@ -9,6 +9,7 @@ import { CaseBox } from '../components/CaseBox';
 import { DropFx, FxState, fxTier, playDropFx } from '../components/DropFx';
 import { useNow, Countdown } from '../components/Countdown';
 import { sfx } from '../sound';
+import { HeroItem } from '../three/HeroItem';
 
 const COUNTS = [1, 3, 5, 10];
 
@@ -118,7 +119,7 @@ export function CasePage({ c, onBack, free }: { c: CaseDef; onBack: () => void; 
         <div className="overlay" onClick={() => setResult(null)}>
           <div className="modal wide" onClick={(e) => e.stopPropagation()}>
             <div className={`result-hero${best && fxTier(best) >= 3 ? ' epic' : ''}`} style={{ ['--rc' as any]: best ? rarityDef(best.rarity).color : '' }}>
-              {best && <ItemCard item={best} />}
+              {best && <HeroItem item={best} />}
               {best?.pattern && best.pattern.tier !== 'normal' && (
                 <div style={{ marginTop: 10, fontWeight: 800 }}>
                   Паттерн #{best.pattern.n} · {best.pattern.name} · {PATTERN_TIERS.find((t) => t.id === best.pattern!.tier)!.name} (x{PATTERN_TIERS.find((t) => t.id === best.pattern!.tier)!.mult})

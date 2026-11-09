@@ -11,6 +11,7 @@ import { ItemCard } from '../components/ItemCard';
 import { ItemArt } from '../components/ItemArt';
 import { DropFx, FxState, playDropFx } from '../components/DropFx';
 import { sfx } from '../sound';
+import { HeroItem } from '../three/HeroItem';
 import { confetti } from '../confetti';
 
 export function ContractPage({ onBack }: { onBack: () => void }) {
@@ -82,7 +83,7 @@ export function ContractPage({ onBack }: { onBack: () => void }) {
         <div className="overlay" onClick={() => setRes(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
             {res.recipe && <div className="recipe-banner">✨ Секретный рецепт{res.first ? ' открыт' : ''}: «{res.recipe.name}»</div>}
-            <div className={`result-hero${res.recipe ? ' epic' : ''}`} style={{ ['--rc' as any]: rarityDef(res.item.rarity).color }}><ItemCard item={res.item} /></div>
+            <div className={`result-hero${res.recipe ? ' epic' : ''}`} style={{ ['--rc' as any]: rarityDef(res.item.rarity).color }}><HeroItem item={res.item} /></div>
             <button className="btn green" style={{ marginTop: 14, width: '100%' }} onClick={() => setRes(null)}>Забрать</button>
           </div>
         </div>

@@ -24,7 +24,7 @@ function wave(r: Rng, y: number, amp: number, freq: number): string {
   return d;
 }
 
-function paint(f: Finish, id: string): { defs: ReactElement[]; body: ReactElement[] } {
+export function paint(f: Finish, id: string): { defs: ReactElement[]; body: ReactElement[] } {
   const r = mulberry32(f.seed);
   const [a, b, c] = f.colors;
   const defs: ReactElement[] = [];
