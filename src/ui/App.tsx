@@ -8,6 +8,7 @@ import { BonusPage } from './pages/BonusPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { BattlesPage } from './pages/BattlesPage';
+import { DevSkins } from './pages/DevSkins';
 import { UpgradePage } from './pages/UpgradePage';
 import { ContractPage } from './pages/ContractPage';
 import { SettingsModal } from './components/SettingsModal';
@@ -29,6 +30,7 @@ const TABS: { id: Tab; ic: string; name: string; mob?: boolean }[] = [
 function parse(): { tab: Tab; caseId?: string; sub?: string } {
   const h = location.hash.replace(/^#\/?/, '').split('/');
   if (h[0] === 'case' && h[1]) return { tab: 'cases', caseId: h[1] };
+  if (h[0] === 'dev-skins') return { tab: 'cases', sub: 'dev-skins' };
   if (h[0] === 'contract') return { tab: 'upgrade', sub: 'contract' };
   if (h[0] === 'battle' && h[1]) return { tab: 'battles', sub: h[1] };
   if (h[0] === 'games') return { tab: 'upgrade' };
@@ -88,7 +90,7 @@ export function App() {
       <div className="layout">
         <Sidebar go={go} />
         <main className="main">
-          {c ? <CasePage key={c.id} c={c} free={c.id === 'free'} onBack={() => go('cases')} />
+          {route.sub === 'dev-skins' ? <DevSkins /> : c ? <CasePage key={c.id} c={c} free={c.id === 'free'} onBack={() => go('cases')} />
             : route.tab === 'cases' ? <CasesPage onOpen={(id) => go('case/' + id)} onBonus={() => go('bonus')} />
             : route.tab === 'bonus' ? <BonusPage onFree={() => go('case/free')} />
             : route.sub === 'contract' ? <ContractPage onBack={() => go('upgrade')} />

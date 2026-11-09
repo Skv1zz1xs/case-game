@@ -5,14 +5,11 @@ import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { ARTS, Art, Mat } from '../components/weaponArt';
-import { paint } from '../components/ItemArt';
+import { paintSkin, wearMap, FINISH_KIND } from './skinPainter';
 import type { Finish } from '../../data/cases';
 import type { WeaponModel } from '../../data/weapons';
 import { PHASE_PALETTES } from '../../data/weapons';
-import { mulberry32, hashStr } from '../../core/rng';
 
 const KNIFE = new Set(['karambit', 'butterfly', 'bayonet', 'bowie', 'stiletto']);
 
@@ -72,38 +69,22 @@ const texCache = new Map<string, Promise<THREE.Texture>>();
 
 function skinTexture(art: Art, f: Finish, float: number, wearSeed: string): Promise<THREE.Texture> {
   const fb = Math.round(float * 10);
-  const key = `${f.image ?? f.style}|${f.colors.join()}|${f.seed}|${art.vb.join()}|${fb}|${fb >= 3 ? wearSeed : ''}`;
+  const key = `${f.image ?? f.style}|${f.colors.join()}|${f.seed}|${art.vb.join()}`; void fb;
   const hit = texCache.get(key);
   if (hit) return hit;
   const p = (async () => {
     const W = 1024, H = Math.round((1024 * art.vb[3]) / art.vb[2]);
-    const img = new Image();
+    let c: HTMLCanvasElement;
     if (f.image) {
+      const img = new Image();
       img.src = ((import.meta as any).env?.BASE_URL ?? './') + f.image;
+      await img.decode();
+      c = document.createElement('canvas'); c.width = W; c.height = H;
+      c.getContext('2d')!.drawImage(img, 0, 0, W, H);
     } else {
-      const { defs, body } = paint(f, 't' + (f.seed % 100000));
-      const svg = renderToStaticMarkup(
-        createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', width: W, height: H, viewBox: '0 0 200 100', preserveAspectRatio: 'none' },
-          createElement('defs', null, ...defs), ...body),
-      );
-      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      c = paintSkin(f, W, H);
     }
-    await img.decode();
-    const c = document.createElement('canvas');
-    c.width = W; c.height = H;
-    const g = c.getContext('2d')!;
-    g.drawImage(img, 0, 0, W, H);
-    // Потёртости: царапины до металла и грязь
-    const r = mulberry32(hashStr(wearSeed));
-    const n = Math.round(float * float * 260);
-    g.strokeStyle = 'rgba(200,206,214,0.75)';
-    g.lineCap = 'round';
-    for (let i = 0; i < n; i++) {
-      g.lineWidth = 1 + r() * 2.5;
-      const x = r() * W, y = r() * H, l = 6 + r() * 40, a = (r() - 0.5) * 0.9;
-      g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke();
-    }
-    if (float > 0.45) { g.fillStyle = `rgba(70,52,30,${((float - 0.45) * 0.5).toFixed(2)})`; g.fillRect(0, 0, W, H); }
+    void float; void wearSeed;
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace;
     t.flipY = false;
@@ -156,46 +137,53 @@ function paintMask(realKey: string): THREE.Texture {
   return t;
 }
 
-// Материал покраски по стилю: металлик, глянец, мат
-function finishLook(style: string): { metal: number; rough: number } {
-  if (['anodized', 'fade', 'hologram', 'galaxy', 'damascus', 'marble'].includes(style)) return { metal: 0.75, rough: 0.22 };
-  if (['camo', 'digital', 'stripes', 'tiger', 'solid'].includes(style)) return { metal: 0.1, rough: 0.7 };
-  return { metal: 0.3, rough: 0.35 };
-}
 
 // Скин на реальной модели: боковая проекция по рамке модели, смешивается с родной текстурой (детали сохраняются)
-function skinnedMaterial(orig: THREE.MeshStandardMaterial, skin: THREE.Texture, mask: THREE.Texture, box: THREE.Box3, float: number, style: string): THREE.Material {
-  const m = orig.clone();
-  const look = finishLook(style);
-  m.metalness = look.metal;
-  m.roughness = Math.min(1, look.rough + float * 0.35);
+const wearCache = new Map<number, THREE.Texture>();
+function wearTex(seed: number) {
+  let t = wearCache.get(seed);
+  if (!t) { t = new THREE.CanvasTexture(wearMap(seed, 256, 128)); t.flipY = false; wearCache.set(seed, t); }
+  return t;
+}
+
+function skinnedMaterial(orig: THREE.MeshStandardMaterial, skin: THREE.Texture, mask: THREE.Texture, box: THREE.Box3, float: number, style: string, wearSeed: number): THREE.Material {
+  const kind = FINISH_KIND[style] ?? 0.4; // 0 мат … 1 металлик
+  const m = new THREE.MeshPhysicalMaterial({
+    map: orig.map ?? null, normalMap: orig.normalMap ?? null, normalScale: orig.normalScale?.clone(),
+    roughnessMap: orig.roughnessMap ?? null, metalnessMap: orig.metalnessMap ?? null, aoMap: orig.aoMap ?? null,
+    color: orig.color?.clone() ?? new THREE.Color(1, 1, 1),
+    metalness: 0.15 + kind * 0.7, roughness: Math.min(1, 0.55 - kind * 0.35 + float * 0.25),
+    clearcoat: kind > 0.3 ? 0.6 + (1 - float) * 0.4 : 0.1, clearcoatRoughness: 0.08 + float * 0.3,
+    iridescence: style === 'hologram' ? 0.9 : 0, iridescenceIOR: 1.6,
+  });
   const uMin = { value: new THREE.Vector2(box.min.x, box.min.y) };
   const uSize = { value: new THREE.Vector2(box.max.x - box.min.x, box.max.y - box.min.y) };
+  const uFloat = { value: float };
+  const uKind = { value: kind };
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSkin = { value: skin }; sh.uniforms.uMask = { value: mask };
-    sh.uniforms.uMin = uMin; sh.uniforms.uSize = uSize;
+    Object.assign(sh.uniforms, { uSkin: { value: skin }, uMask: { value: mask }, uWear: { value: wearTex(wearSeed) }, uMin, uSize, uFloat, uKind });
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec2 vSkinUv;\nuniform vec2 uMin; uniform vec2 uSize;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSkinUv = vec2((position.x - uMin.x) / uSize.x, 1.0 - (position.y - uMin.y) / uSize.y);');
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec2 vSkinUv;\nuniform sampler2D uSkin; uniform sampler2D uMask;')
+      .replace('#include <common>', '#include <common>\nvarying vec2 vSkinUv;\nuniform sampler2D uSkin; uniform sampler2D uMask; uniform sampler2D uWear; uniform float uFloat; uniform float uKind;\nfloat gPaint; float gWorn;')
       .replace('#include <map_fragment>', `#include <map_fragment>
         float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
         vec3 sk = texture2D(uSkin, vSkinUv).rgb;
-        float pm = texture2D(uMask, vSkinUv).r;
-        // насыщенность и контраст краски, детали — из яркости родной текстуры
-        float g = dot(sk, vec3(0.299, 0.587, 0.114));
-        sk = clamp(mix(vec3(g), sk, 1.35), 0.0, 1.0);
-        vec3 painted = sk * (0.25 + 1.6 * lum);
-        diffuseColor.rgb = mix(diffuseColor.rgb, painted, pm);`);
-    // металл без покраски остаётся металлом
-    sh.fragmentShader = sh.fragmentShader.replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
-        float pm2 = texture2D(uMask, vSkinUv).r;
-        metalnessFactor = mix(0.85, metalnessFactor, pm2);`).replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-        float pm3 = texture2D(uMask, vSkinUv).r;
-        roughnessFactor = mix(0.32, roughnessFactor, pm3);`);
+        gPaint = texture2D(uMask, vSkinUv).r;
+        // износ: где карта износа ниже порога — краска стёрта до металла
+        float w = texture2D(uWear, vSkinUv * vec2(3.0, 2.0)).r;
+        gWorn = gPaint * (1.0 - smoothstep(uFloat * 0.75 - 0.04, uFloat * 0.75 + 0.02, w));
+        // детали модели как «высокие частоты»: цвет скина не темнеет от чёрной базы
+        vec3 painted = sk * clamp(0.92 + 1.5 * (lum - 0.18), 0.55, 1.25);
+        vec3 metal = vec3(0.58, 0.6, 0.63) * (0.7 + lum);
+        diffuseColor.rgb = mix(diffuseColor.rgb, mix(painted, metal, gWorn), gPaint);`)
+      .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
+        metalnessFactor = mix(0.85, mix(metalnessFactor, 0.95, gWorn), gPaint);`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor = mix(0.32, mix(roughnessFactor, 0.4, gWorn), gPaint);`);
   };
-  m.customProgramCacheKey = () => 'skin';
+  m.customProgramCacheKey = () => 'skin2';
   return m;
 }
 
@@ -255,7 +243,8 @@ async function buildReal(src: THREE.Object3D, key: string, finish: Finish, o: Mo
     if (m instanceof THREE.Mesh) {
       const mats = Array.isArray(m.material) ? m.material : [m.material];
       const mask = paintMask(realKeyOf(key));
-      const out = mats.map((mm) => skinnedMaterial(mm as THREE.MeshStandardMaterial, tex, mask, bb, float, f.style));
+      const ws = Math.abs(Number.parseInt(String(o.wearSeed ?? finish.seed).replace(/\D/g, '').slice(0, 8) || '1', 10)) || finish.seed;
+      const out = mats.map((mm) => skinnedMaterial(mm as THREE.MeshStandardMaterial, tex, mask, bb, float, f.style, ws));
       m.material = Array.isArray(m.material) ? out : out[0];
     }
   });
@@ -277,7 +266,8 @@ export function makeStage(canvas?: HTMLCanvasElement) {
   renderer.toneMappingExposure = 1.15;
   const scene = new THREE.Scene();
   const pm = new THREE.PMREMGenerator(renderer);
-  scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environment = pm.fromScene(new RoomEnvironment(), 0.02).texture;
+  scene.environmentIntensity = 1.25;
   const key = new THREE.DirectionalLight(0xffffff, 1.8); key.position.set(-2, 3, 4); scene.add(key);
   const rim = new THREE.DirectionalLight(0x9ec3ff, 1.1); rim.position.set(3, 1, -3); scene.add(rim);
   const fill = new THREE.DirectionalLight(0xffe2c4, 0.5); fill.position.set(2, -2, 3); scene.add(fill);
