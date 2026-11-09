@@ -15,9 +15,10 @@ interface Props {
   selected?: boolean;
   star?: boolean;
   onClick?: () => void;
+  onLock?: () => void;
 }
 
-export const ItemCard = memo(function ItemCard({ item, skin, priceText, compact, selected, star, onClick }: Props) {
+export const ItemCard = memo(function ItemCard({ item, skin, priceText, compact, selected, star, onClick, onLock }: Props) {
   const s = skin ?? (item ? skinById(item.skinId) : undefined);
   if (!s) return null;
   const rd = rarityDef(item?.rarity ?? s.rarity);
@@ -34,6 +35,7 @@ export const ItemCard = memo(function ItemCard({ item, skin, priceText, compact,
         </div>
       )}
       {star && <span className="star">⭐</span>}
+      {onLock && item && <span className={`lockbtn${item.locked ? ' on' : ''}`} role="button" title={item.locked ? 'Открепить' : 'Закрепить (не продастся)'} onClick={(e) => { e.stopPropagation(); onLock(); }}>{item.locked ? '🔒' : '🔓'}</span>}
       <ItemView model={s.model} finish={s.finish} color={rd.color} float={item?.float} wearSeed={item?.id} phase={item?.pattern?.tier !== 'normal' ? item?.pattern?.name : undefined} gem={!!gem} />
       <div className="nm">{s.model.name}</div>
       <div className="sk">{s.skin}</div>

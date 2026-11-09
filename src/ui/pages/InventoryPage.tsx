@@ -10,7 +10,7 @@ import { sfx } from '../sound';
 
 const PAGE = 120;
 
-export function InventoryPage() {
+export function InventoryPage({ embedded }: { embedded?: boolean } = {}) {
   const p = useProfile();
   const [rar, setRar] = useState<string>('all');
   const [kind, setKind] = useState<string>('all');
@@ -48,7 +48,8 @@ export function InventoryPage() {
   return (
     <div>
       <div className="row" style={{ marginBottom: 14 }}>
-        <h1 style={{ fontSize: 24 }} className="grow">Инвентарь</h1>
+        <h1 style={{ fontSize: 24, display: embedded ? 'none' : undefined }} className="grow">🗃 Мои предметы</h1>
+        {embedded && <div className="grow" />}
         <div className="muted small">{p.inventory.length} шт. · <i className="coin" /> {fmt(total)}</div>
       </div>
 
@@ -74,7 +75,7 @@ export function InventoryPage() {
       {list.length === 0 ? <div className="empty">Пусто. Открой пару кейсов!</div> : (
         <div className="item-grid">
           {list.slice(0, limit).map((it) => (
-            <ItemCard key={it.id} item={it} selected={sel?.has(it.id)} star={p.showcase.includes(it.id)}
+            <ItemCard key={it.id} item={it} selected={sel?.has(it.id)} star={p.showcase.includes(it.id)} onLock={() => game.toggleLock(it.id)}
               onClick={() => {
                 if (sel) { const n = new Set(sel); if (n.has(it.id)) n.delete(it.id); else if (!it.locked) n.add(it.id); setSel(n); }
                 else setOpen(it);

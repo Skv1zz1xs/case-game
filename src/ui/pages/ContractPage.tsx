@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CONTRACT_SIZE, rarityDef } from '../../config/economy';
+import { CONTRACT_SIZE, CONTRACT_PAYOUT_TABLE, rarityDef } from '../../config/economy';
 import { caseById } from '../../data/cases';
 import { RECIPES } from '../../data/recipes';
 import { Item, sortItems } from '../../core/items';
@@ -73,6 +73,23 @@ export function ContractPage({ onBack }: { onBack: () => void }) {
           <button className="btn sm" onClick={autofill} disabled={sel.length >= CONTRACT_SIZE}>Автозаполнить</button>
           <button className="btn sm" onClick={() => setSel([])} disabled={!sel.length}>Очистить</button>
           <button className="btn primary" onClick={sign} disabled={!!err || signing}>{signing ? 'Подписываем…' : `Подписать (${sel.length}/${CONTRACT_SIZE})`}</button>
+        </div>
+      </div>
+
+      <div className="glass" style={{ padding: 14, marginBottom: 14 }}>
+        <div className="small" style={{ fontWeight: 800, marginBottom: 8 }}>ТЫ ПОЛУЧИШЬ ОДИН СКИН СТОИМОСТЬЮ</div>
+        <div className="payout">
+          {CONTRACT_PAYOUT_TABLE.map((r, i) => {
+            const tot = CONTRACT_PAYOUT_TABLE.reduce((a, b) => a + b.weight, 0);
+            const good = r.min >= 1 || (r.min < 1 && r.max > 1);
+            return (
+              <div key={i} className={`pay ${r.max <= 1 ? 'lo' : good ? 'hi' : ''}`} style={{ flex: Math.max(r.weight, 6) }}>
+                <b>{((r.weight / tot) * 100).toFixed(1)}%</b>
+                <span>{r.min.toString().replace('.', ',')}–{r.max.toString().replace('.', ',')}×</span>
+                {range.sum > 0 && <span className="muted"><i className="coin" /> {fmt(range.sum * r.min)}–{fmt(range.sum * r.max)}</span>}
+              </div>
+            );
+          })}
         </div>
       </div>
 
