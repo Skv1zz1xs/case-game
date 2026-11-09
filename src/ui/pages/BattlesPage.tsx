@@ -167,6 +167,11 @@ function BattleView({ cfg, done, onBack }: { cfg: BattleCfg; done: boolean; onBa
         <span className="small muted">· {c.name}</span>
       </div>
       <div className="bt-progress"><div style={{ width: `${(Math.min(r, rounds.length) / rounds.length) * 100}%` }} /></div>
+      <div className="bt-rounds">
+        {rounds.map((cid, k) => (
+          <div key={k} className={`bt-round${k === cur && !finished ? ' cur' : ''}${k < r ? ' done' : ''}`}><CaseImg c={caseById(cid)!} /></div>
+        ))}
+      </div>
       <div className="bt-arena" style={{ gridTemplateColumns: `repeat(${cfg.slots.length}, minmax(0, 1fr))` }}>
         {cfg.slots.map((s, i) => {
           const win = finished && res.winners.includes(i);
@@ -191,7 +196,7 @@ function BattleView({ cfg, done, onBack }: { cfg: BattleCfg; done: boolean; onBa
       {finished && (
         <div className="glass bt-result">
           {cfg.rule === 'jackpot' && <div className="small muted">Рулетка джекпота: {(res.jackpotRoll! * 100).toFixed(1)}%</div>}
-          <h2>{res.winners.includes(0) ? '🏆 Ты выиграл!' : '😵 Не в этот раз'}</h2>
+          <div className={`bt-verdict ${res.winners.includes(0) ? 'win' : 'lose'}`}>{res.winners.includes(0) ? 'ПОБЕДА' : 'ПОРАЖЕНИЕ'}</div>
           <div className="small">{res.winners.map((w) => cfg.slots[w].nick).join(' и ')} забира{res.winners.length > 1 ? 'ют' : 'ет'} всё: <b><i className="coin" /> {fmt(res.drops.flat().reduce((a, i) => a + i.price, 0))}</b></div>
           <button className="btn primary" onClick={onBack}>К батлам</button>
         </div>

@@ -41,7 +41,7 @@ export function CasePage({ c, onBack, free }: { c: CaseDef; onBack: () => void; 
       // вступление: кейс трясётся и светится, вспышка — и появляются барабаны
       const intro = p.settings.anim === 'off' || fast ? 0 : 750;
       setOpening(true);
-      sfx.whoosh();
+      sfx.open();
       setTimeout(() => {
         setOpening(false);
         setItems(got); setDone(0); setSpinning(true); setSpinKey((k) => k + 1);

@@ -16,6 +16,19 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
+// Короткий шум (щелчок механики, удар) через буфер случайных значений
+function noise(dur: number, gain: number, when = 0, freq = 3000, q = 1) {
+  const a = ac(); if (!a) return;
+  const t = a.currentTime + when;
+  const len = Math.max(1, Math.floor(a.sampleRate * dur));
+  const buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+  const src = a.createBufferSource(); src.buffer = buf;
+  const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+  const g = a.createGain(); g.gain.value = gain * volume;
+  src.connect(f).connect(g).connect(a.destination); src.start(t);
+}
+
 function tone(freq: number, dur: number, type: OscillatorType, gain: number, when = 0, slide = 0) {
   const a = ac(); if (!a) return;
   const t = a.currentTime + when;
@@ -30,10 +43,15 @@ function tone(freq: number, dur: number, type: OscillatorType, gain: number, whe
 }
 
 export const sfx = {
-  tick() { tone(1900, 0.03, 'square', 0.08); tone(950, 0.03, 'triangle', 0.08); },
+  // щелчок ленты: механический клик с лёгким разбросом высоты
+  tick() { noise(0.025, 0.5, 0, 2600 + Math.random() * 900, 4); tone(1700 + Math.random() * 200, 0.02, 'triangle', 0.05); },
+  // открытие кейса: защёлки + нарастающий «вжух»
+  open() { noise(0.05, 0.6, 0, 1800, 3); noise(0.05, 0.6, 0.12, 2200, 3); tone(140, 0.7, 'sawtooth', 0.05, 0.1, 5); noise(0.5, 0.25, 0.25, 900, 0.7); },
+  // глухой удар (проигрыш апгрейда, лишний предмет)
+  thud() { tone(90, 0.3, 'sine', 0.4, 0, 0.5); noise(0.15, 0.4, 0, 400, 1); },
   click() { tone(600, 0.05, 'triangle', 0.15); },
   coin() { tone(1320, 0.08, 'square', 0.1); tone(1760, 0.12, 'square', 0.1, 0.06); },
-  lose() { tone(300, 0.35, 'sawtooth', 0.12, 0, 0.4); },
+  lose() { tone(300, 0.35, 'sawtooth', 0.12, 0, 0.4); tone(90, 0.3, 'sine', 0.35, 0.05, 0.5); },
   // победные звуки по крутости: 0 — обычный … 5 — контрабанда
   win(tier: number) {
     const base = [523, 587, 659, 784, 880, 1047];

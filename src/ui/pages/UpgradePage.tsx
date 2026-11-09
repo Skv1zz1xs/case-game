@@ -35,6 +35,8 @@ function Gauge({ chance, angle, spinning, fast, state }: { chance: number; angle
         <div className="gauge-pct" style={{ color: state === 'idle' ? '#fff' : col }}>{(chance * 100).toFixed(2).replace('.', ',')}%</div>
         <div className="gauge-sub">{state === 'win' ? 'ПОБЕДА' : state === 'lose' ? 'НЕ ПОВЕЗЛО' : 'ШАНС'}</div>
       </div>
+      {state !== 'idle' && !spinning && <div className={`gauge-stamp ${state}`}>{state === 'win' ? 'АПГРЕЙД!' : 'МИМО'}</div>}
+      {state === 'win' && !spinning && <div className="gauge-burst" />}
     </div>
   );
 }
@@ -82,7 +84,7 @@ export function UpgradePage({ onContract }: { onBack?: () => void; onContract?: 
       setSel([]); setCoins(0);
       setTimeout(() => {
         setSpinning(false); setState(r.win ? 'win' : 'lose');
-        if (r.win && r.item) { setWon(r.item); playDropFx(r.item, p.settings.anim, setFx); } else sfx.lose();
+        if (r.win && r.item) { setWon(r.item); playDropFx(r.item, p.settings.anim, setFx); sfx.win(2); } else sfx.lose();
       }, p.settings.fast ? 1350 : 4250);
     } catch (e) { toast((e as Error).message, 'bad'); }
   };
