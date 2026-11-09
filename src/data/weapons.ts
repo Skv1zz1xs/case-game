@@ -1,45 +1,44 @@
-// Модели оружия — все названия выдуманные
+// Модели оружия: реальные образцы (рисуются в ui/components/weaponArt.ts)
 export type WeaponKind = 'pistol' | 'smg' | 'rifle' | 'sniper' | 'shotgun' | 'mg' | 'knife' | 'gloves';
-export type KnifeShape = 'claw' | 'butterfly' | 'bayonet' | 'bowie' | 'stiletto';
 
 export interface WeaponModel {
   id: string;
   name: string;
   kind: WeaponKind;
-  shape?: KnifeShape | 'pistol2' | 'rifle2';
+  art: string; // ключ рисунка
 }
 
 export const WEAPONS: WeaponModel[] = [
-  { id: 'p9', name: 'П-9 «Шершень»', kind: 'pistol' },
-  { id: 'grom', name: 'Револьвер «Гром»', kind: 'pistol', shape: 'pistol2' },
-  { id: 'kobra', name: 'ПМ-К «Кобра»', kind: 'pistol' },
-  { id: 'iskra', name: 'Пистолет «Искра»', kind: 'pistol', shape: 'pistol2' },
-  { id: 'osa', name: 'ПП «Оса»', kind: 'smg' },
-  { id: 'vihr', name: 'ПП «Вихрь»', kind: 'smg' },
-  { id: 'kvant', name: 'ПП «Квант»', kind: 'smg' },
-  { id: 'taiga', name: 'Автомат «Тайга»', kind: 'rifle' },
-  { id: 'sokol', name: 'Винтовка «Сокол»', kind: 'rifle', shape: 'rifle2' },
-  { id: 'buran', name: 'Автомат «Буран»', kind: 'rifle' },
-  { id: 'rys', name: 'Карабин «Рысь»', kind: 'rifle', shape: 'rifle2' },
-  { id: 'groza', name: 'Снайперка «Гроза»', kind: 'sniper' },
-  { id: 'yastreb', name: 'Винтовка «Ястреб»', kind: 'sniper' },
-  { id: 'bur', name: 'Дробовик «Бур»', kind: 'shotgun' },
-  { id: 'mamont', name: 'Обрез «Мамонт»', kind: 'shotgun' },
-  { id: 'molot', name: 'Пулемёт «Молот»', kind: 'mg' },
+  { id: 'glock', name: 'Glock-18', kind: 'pistol', art: 'glock' },
+  { id: 'deagle', name: 'Desert Eagle', kind: 'pistol', art: 'deagle' },
+  { id: 'usp', name: 'USP-S', kind: 'pistol', art: 'usp' },
+  { id: 'p250', name: 'P250', kind: 'pistol', art: 'glock' },
+  { id: 'mp7', name: 'MP7', kind: 'smg', art: 'mp7' },
+  { id: 'p90', name: 'P90', kind: 'smg', art: 'p90' },
+  { id: 'mac10', name: 'MAC-10', kind: 'smg', art: 'mac10' },
+  { id: 'ak47', name: 'AK-47', kind: 'rifle', art: 'ak' },
+  { id: 'm4a4', name: 'M4A4', kind: 'rifle', art: 'm4' },
+  { id: 'm4a1s', name: 'M4A1-S', kind: 'rifle', art: 'm4s' },
+  { id: 'galil', name: 'Galil AR', kind: 'rifle', art: 'ak' },
+  { id: 'awp', name: 'AWP', kind: 'sniper', art: 'awp' },
+  { id: 'ssg08', name: 'SSG 08', kind: 'sniper', art: 'awp' },
+  { id: 'nova', name: 'Nova', kind: 'shotgun', art: 'nova' },
+  { id: 'xm1014', name: 'XM1014', kind: 'shotgun', art: 'nova' },
+  { id: 'negev', name: 'Negev', kind: 'mg', art: 'negev' },
 ];
 
 export const KNIVES: WeaponModel[] = [
-  { id: 'claw', name: 'Нож «Коготь»', kind: 'knife', shape: 'claw' },
-  { id: 'moth', name: 'Нож «Мотылёк»', kind: 'knife', shape: 'butterfly' },
-  { id: 'klyk', name: 'Штык «Клык»', kind: 'knife', shape: 'bayonet' },
-  { id: 'medved', name: 'Тесак «Медведь»', kind: 'knife', shape: 'bowie' },
-  { id: 'stilet', name: 'Нож «Стилет»', kind: 'knife', shape: 'stiletto' },
+  { id: 'karambit', name: 'Керамбит', kind: 'knife', art: 'karambit' },
+  { id: 'butterfly', name: 'Нож-бабочка', kind: 'knife', art: 'butterfly' },
+  { id: 'm9', name: 'Штык-нож M9', kind: 'knife', art: 'bayonet' },
+  { id: 'bowie', name: 'Нож Боуи', kind: 'knife', art: 'bowie' },
+  { id: 'stiletto', name: 'Стилет', kind: 'knife', art: 'stiletto' },
 ];
 
 export const GLOVES: WeaponModel[] = [
-  { id: 'gkobra', name: 'Перчатки «Кобра»', kind: 'gloves' },
-  { id: 'gdrive', name: 'Перчатки «Драйв»', kind: 'gloves' },
-  { id: 'gshtorm', name: 'Перчатки «Шторм»', kind: 'gloves' },
+  { id: 'gsport', name: 'Спортивные перчатки', kind: 'gloves', art: 'gloves' },
+  { id: 'gdriver', name: 'Водительские перчатки', kind: 'gloves', art: 'gloves' },
+  { id: 'gtact', name: 'Тактические перчатки', kind: 'gloves', art: 'gloves' },
 ];
 
 export const ALL_MODELS = [...WEAPONS, ...KNIVES, ...GLOVES];
@@ -53,17 +52,17 @@ export const KIND_NAMES: Record<WeaponKind, string> = {
 // Узоры покраски (рисуются в ui/components/ItemArt.tsx)
 export type PatternStyle =
   | 'solid' | 'fade' | 'camo' | 'damascus' | 'carbon' | 'acid' | 'hologram'
-  | 'marble' | 'tiger' | 'digital' | 'stripes' | 'galaxy' | 'lava' | 'circuit';
+  | 'marble' | 'tiger' | 'digital' | 'stripes' | 'galaxy' | 'lava' | 'circuit' | 'anodized' | 'graphic';
 
 // Чем выше редкость, тем «дороже» выглядит узор
 export const PATTERNS_BY_TIER: PatternStyle[][] = [
   ['solid', 'camo', 'digital', 'stripes'],                 // ширпотреб
   ['camo', 'digital', 'stripes', 'carbon', 'fade'],        // промышленное
-  ['carbon', 'fade', 'tiger', 'acid', 'stripes'],          // армейское
-  ['fade', 'tiger', 'acid', 'damascus', 'circuit'],        // запрещённое
-  ['damascus', 'marble', 'circuit', 'lava', 'fade'],       // засекреченное
-  ['marble', 'lava', 'hologram', 'galaxy', 'circuit'],     // тайное
-  ['damascus', 'marble', 'hologram', 'galaxy', 'fade', 'lava'], // редкое
+  ['carbon', 'fade', 'tiger', 'acid', 'anodized'],         // армейское
+  ['fade', 'graphic', 'acid', 'damascus', 'anodized'],     // запрещённое
+  ['graphic', 'marble', 'circuit', 'lava', 'fade'],        // засекреченное
+  ['graphic', 'lava', 'hologram', 'galaxy', 'marble'],     // тайное
+  ['damascus', 'marble', 'hologram', 'galaxy', 'fade', 'anodized'], // редкое
   ['hologram', 'galaxy'],                                  // контрабанда
 ];
 

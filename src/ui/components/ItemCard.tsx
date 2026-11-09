@@ -34,7 +34,7 @@ export const ItemCard = memo(function ItemCard({ item, skin, priceText, compact,
         </div>
       )}
       {star && <span className="star">⭐</span>}
-      <ItemArt model={s.model} finish={s.finish} color={rd.color} phase={item?.pattern?.tier !== 'normal' ? item?.pattern?.name : undefined} gem={!!gem} />
+      <ItemArt model={s.model} finish={s.finish} color={rd.color} float={item?.float} wearSeed={item?.id} phase={item?.pattern?.tier !== 'normal' ? item?.pattern?.name : undefined} gem={!!gem} />
       <div className="nm">{s.model.name}</div>
       <div className="sk">{s.skin}</div>
       {priceText !== "" && <div className="pr"><i className="coin" />{priceText ?? (item ? fmt(item.price) : fmt(s.base))}</div>}

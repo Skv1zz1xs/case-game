@@ -1,91 +1,10 @@
 // Рисует предмет: силуэт оружия + процедурная покраска по seed. Без внешней графики.
 import { useId, memo, ReactElement } from 'react';
-import { mulberry32, Rng } from '../../core/rng';
+import { mulberry32, Rng, hashStr } from '../../core/rng';
 import type { Finish } from '../../data/cases';
 import type { WeaponModel } from '../../data/weapons';
+import { ARTS, Part } from './weaponArt';
 import { PHASE_PALETTES } from '../../data/weapons';
-
-type Shape = { vb: string; d: string; details: string[] };
-
-// Силуэты в поле 200×100
-const SHAPES: Record<string, Shape> = {
-  pistol: {
-    vb: '36 20 136 78',
-    d: 'M45 28 H158 Q162 28 162 32 V42 Q162 44 158 44 H140 V50 H106 Q104 62 96 62 H90 Q86 62 86 56 V50 H84 L74 88 Q73 90 70 90 H52 Q48 90 49 86 L58 50 Q50 48 46 44 Z M91 52 H101 Q100 58 96 58 H93 Q91 58 91 55 Z',
-    details: ['M50 36 H150', 'M120 30 V42', 'M126 30 V42', 'M132 30 V42', 'M62 60 L72 62', 'M60 68 L70 70', 'M58 76 L68 78'],
-  },
-  pistol2: {
-    vb: '22 22 158 78',
-    d: 'M30 36 H112 V30 H134 V36 H172 V44 H134 V52 Q134 58 126 58 H116 Q112 66 104 66 Q98 66 98 60 H92 L80 90 Q78 93 74 93 H58 Q54 93 55 89 L66 58 Q58 56 58 50 V44 H30 Z',
-    details: ['M116 32 V54', 'M124 32 V54', 'M36 40 H108', 'M72 66 L64 86'],
-  },
-  rifle: {
-    vb: '2 24 196 66',
-    d: 'M8 40 L40 36 H70 V32 H150 V38 H192 V42 H150 V48 H128 L122 50 H112 Q118 66 116 80 L102 82 Q100 64 96 50 H84 L80 58 Q78 62 74 62 H70 Q66 62 66 58 V50 H52 L44 62 Q42 66 36 66 L10 60 Q6 59 6 55 V44 Q6 41 8 40 Z',
-    details: ['M70 40 H150', 'M130 34 V46', 'M136 34 V46', 'M142 34 V46', 'M20 46 L46 44', 'M104 56 L112 56'],
-  },
-  rifle2: {
-    vb: '2 22 196 62',
-    d: 'M6 38 H60 L64 34 H156 V39 H194 V43 H156 V50 H120 V76 H106 V50 H90 Q88 60 80 62 H72 Q68 60 68 54 L60 52 L58 60 H6 Z',
-    details: ['M64 40 H154', 'M14 44 H56', 'M108 56 H118', 'M108 64 H118', 'M80 30 H120 V34'],
-  },
-  sniper: {
-    vb: '0 16 200 60',
-    d: 'M4 44 L34 40 H60 V30 H70 V24 H132 V30 H138 V40 H196 V44 H140 V50 H118 V66 H108 V50 H92 Q90 60 82 62 H76 Q72 60 72 54 L60 52 L52 64 Q50 68 44 68 L6 62 Z',
-    details: ['M74 27 H128', 'M64 44 H136', 'M160 41 V43', 'M14 50 L50 48'],
-  },
-  smg: {
-    vb: '22 24 156 64',
-    d: 'M30 36 H140 V32 H152 V36 H170 V44 H140 V50 H112 V80 H100 V50 H88 Q86 60 78 62 H72 Q68 60 68 54 L62 52 L56 74 Q55 77 52 77 H42 Q39 77 40 74 L46 50 H30 Z',
-    details: ['M36 41 H136', 'M102 58 H110', 'M102 66 H110', 'M118 38 V48', 'M124 38 V48'],
-  },
-  shotgun: {
-    vb: '0 22 184 54',
-    d: 'M6 46 L44 38 H80 V34 H176 V40 H180 V52 H96 L90 54 Q88 62 80 62 H76 Q72 62 72 56 L60 54 L50 64 L10 60 Q4 59 4 54 V50 Q4 47 6 46 Z',
-    details: ['M84 40 H174', 'M110 44 H160 V52', 'M110 44 V52', 'M118 44 V52', 'M126 44 V52', 'M16 52 L50 48'],
-  },
-  mg: {
-    vb: '2 24 196 56',
-    d: 'M6 40 L40 34 H150 V38 H194 V44 H150 V52 H130 V70 H96 V52 H86 Q84 62 76 62 H70 Q66 62 66 56 L54 54 L46 64 L8 58 Z',
-    details: ['M44 40 H148', 'M100 56 H126', 'M100 62 H126', 'M170 44 L160 70', 'M174 44 L184 70'],
-  },
-  claw: {
-    vb: '14 4 172 82',
-    d: 'M30 70 Q20 60 30 52 L70 46 Q110 40 140 20 Q170 6 180 18 Q150 30 128 50 Q110 62 84 64 L72 66 Q62 80 48 80 Q34 80 30 70 Z M37 68 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0 Z',
-    details: ['M74 50 Q120 40 166 16', 'M62 52 L66 64'],
-  },
-  butterfly: {
-    vb: '2 26 190 50',
-    d: 'M14 50 H92 V44 L174 40 Q188 45 176 52 L96 58 V62 H14 Q6 56 14 50 Z',
-    details: ['M18 56 H90', 'M96 47 L170 44', 'M30 53 V59', 'M50 53 V59', 'M70 53 V59'],
-  },
-  bayonet: {
-    vb: '0 26 198 48',
-    d: 'M10 44 H70 L76 36 H84 V44 L176 44 L194 50 L176 56 H84 V64 H76 L70 56 H10 Q4 50 10 44 Z',
-    details: ['M88 50 H176', 'M20 48 V52', 'M32 48 V52', 'M44 48 V52', 'M56 48 V52', 'M140 44 Q150 47 160 44'],
-  },
-  bowie: {
-    vb: '0 24 196 54',
-    d: 'M10 46 H64 L70 36 H78 V46 H150 Q178 46 192 32 Q190 62 160 62 H78 V70 H70 L64 60 H10 Q4 53 10 46 Z',
-    details: ['M82 52 H160 Q180 50 188 40', 'M22 50 V56', 'M36 50 V56', 'M50 50 V56'],
-  },
-  stiletto: {
-    vb: '4 28 192 44',
-    d: 'M14 46 H80 L84 40 H90 V47 L192 50 L90 53 V60 H84 L80 54 H14 Q8 50 14 46 Z',
-    details: ['M94 50 H186', 'M24 48 V52', 'M40 48 V52', 'M56 48 V52'],
-  },
-  gloves: {
-    vb: '20 2 124 94',
-    d: 'M70 94 V62 Q60 58 56 50 L42 34 Q38 27 45 25 Q51 23 56 30 L66 42 V18 Q66 11 72 11 Q78 11 78 18 V40 H82 V12 Q82 5 88 5 Q94 5 94 12 V40 H98 V14 Q98 7 104 7 Q110 7 110 14 V42 H114 V22 Q114 15 120 15 Q126 15 126 22 V64 Q126 76 118 82 V94 Z',
-    details: ['M70 82 H118', 'M72 88 H116', 'M78 40 V58', 'M94 40 V58', 'M110 42 V58', 'M66 50 Q80 60 110 58'],
-  },
-};
-
-export function shapeKey(m: WeaponModel): string {
-  if (m.kind === 'knife') return m.shape ?? 'claw';
-  if (m.shape === 'pistol2' || m.shape === 'rifle2') return m.shape;
-  return m.kind;
-}
 
 function blobs(r: Rng, n: number, colors: string[], rmin: number, rmax: number, op = 1): ReactElement[] {
   const out: ReactElement[] = [];
@@ -193,6 +112,36 @@ function paint(f: Finish, id: string): { defs: ReactElement[]; body: ReactElemen
       for (let i = 0; i < 70; i++) body.push(<circle key={'s' + i} cx={r() * 200} cy={r() * 100} r={r() * 1.3 + 0.3} fill="#fff" opacity={0.5 + r() * 0.5} />);
       break;
     }
+    case 'anodized': {
+      // Анодированный металл: насыщенный цвет с сильным бликом
+      defs.push(
+        <linearGradient key="g" id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={c} /><stop offset="0.18" stopColor="#ffffff" stopOpacity="0.9" /><stop offset="0.32" stopColor={a} />
+          <stop offset="0.7" stopColor={b} /><stop offset="1" stopColor="#05060a" />
+        </linearGradient>,
+      );
+      body.push(<rect key="b" width="200" height="100" fill={`url(#${gid})`} />);
+      for (let i = 0; i < 6; i++) body.push(<rect key={'a' + i} x={r() * 200} y={0} width={1 + r() * 2} height={100} fill="#fff" opacity={0.08} />);
+      break;
+    }
+    case 'graphic': {
+      // Графичный дизайн: крупные диагональные плашки, обводки, «логотип»-ромб
+      body.push(<rect key="b" width="200" height="100" fill={b} />);
+      const ang = -20 - r() * 30;
+      body.push(
+        <g key="g" transform={`rotate(${ang} 100 50)`}>
+          <rect x={-40} y={20 + r() * 10} width={300} height={22} fill={a} />
+          <rect x={-40} y={46 + r() * 6} width={300} height={6} fill={c} />
+          <rect x={-40} y={58 + r() * 8} width={300} height={14} fill="#0b0b0f" />
+          <rect x={-40} y={10} width={300} height={3} fill={c} />
+        </g>,
+      );
+      const cx = 40 + r() * 120;
+      body.push(<path key="d" d={`M${cx} 22 L${cx + 18} 50 L${cx} 78 L${cx - 18} 50 Z`} fill={c} stroke="#0b0b0f" strokeWidth={3} />,
+        <path key="d2" d={`M${cx} 36 L${cx + 9} 50 L${cx} 64 L${cx - 9} 50 Z`} fill="#0b0b0f" />);
+      for (let i = 0; i < 18; i++) body.push(<circle key={'p' + i} cx={r() * 200} cy={r() * 100} r={0.8 + r() * 1.6} fill={c} opacity={0.7} />);
+      break;
+    }
     case 'circuit': {
       body.push(<rect key="b" width="200" height="100" fill={b} />);
       for (let i = 0; i < 26; i++) {
@@ -207,42 +156,74 @@ function paint(f: Finish, id: string): { defs: ReactElement[]; body: ReactElemen
   return { defs, body };
 }
 
+const MAT: Record<Exclude<Part['m'], 'paint'>, [string, string, string]> = {
+  metal: ['#5b616c', '#262a31', '#3a3f48'],
+  poly: ['#3a3d43', '#16171a', '#24262a'],
+  chrome: ['#e9edf2', '#8c96a3', '#c8d0da'],
+  dark: ['#2b2e35', '#0e0f12', '#1c1e23'],
+};
+
 interface Props {
   model: WeaponModel;
   finish: Finish;
   color?: string;           // свечение редкости
   phase?: string;           // фаза ножа (перекрашивает гемы)
   gem?: boolean;
+  float?: number;           // износ: потёртости и грязь
+  wearSeed?: string;
   className?: string;
 }
 
-export const ItemArt = memo(function ItemArt({ model, finish, color, phase, gem, className }: Props) {
+export const ItemArt = memo(function ItemArt({ model, finish, color, phase, gem, float = 0.1, wearSeed, className }: Props) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const shape = SHAPES[shapeKey(model)] ?? SHAPES.rifle;
+  const art = ARTS[model.art] ?? ARTS.ak;
+  const [vx, vy, vw, vh] = art.vb;
   const f: Finish = phase && PHASE_PALETTES[phase] ? { ...finish, colors: PHASE_PALETTES[phase] } : finish;
   const { defs, body } = paint(f, id);
+  const paintParts = art.parts.filter((p) => p.m === 'paint');
+  // Потёртости: чем выше износ, тем больше царапин до металла
+  const wr = mulberry32(hashStr(wearSeed ?? finish.seed.toString()));
+  const nScr = Math.round(float * float * 70);
+  const scratches: string[] = [];
+  for (let i = 0; i < nScr; i++) {
+    const x = vx + wr() * vw, y = vy + wr() * vh, l = 3 + wr() * 14, a = (wr() - 0.5) * 0.8;
+    scratches.push(`M${x.toFixed(1)} ${y.toFixed(1)} l${(Math.cos(a) * l).toFixed(1)} ${(Math.sin(a) * l).toFixed(1)}`);
+  }
   return (
-    <svg viewBox={shape.vb} className={className} style={color ? { filter: `drop-shadow(0 0 6px ${color}88)` } : undefined} aria-hidden>
+    <svg viewBox={art.vb.join(' ')} className={className} style={color ? { filter: `drop-shadow(0 0 7px ${color}77)` } : undefined} aria-hidden>
       <defs>
-        <clipPath id={`${id}c`}><path d={shape.d} fillRule="evenodd" clipRule="evenodd" /></clipPath>
+        <clipPath id={`${id}c`}>{paintParts.map((p, i) => <path key={i} d={p.d} fillRule={p.ev ? 'evenodd' : 'nonzero'} clipRule={p.ev ? 'evenodd' : 'nonzero'} />)}</clipPath>
         <linearGradient id={`${id}s`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fff" stopOpacity="0.55" /><stop offset="0.38" stopColor="#fff" stopOpacity="0.08" /><stop offset="0.5" stopColor="#000" stopOpacity="0" />
-          <stop offset="1" stopColor="#000" stopOpacity="0.35" />
+          <stop offset="0" stopColor="#fff" stopOpacity="0.42" /><stop offset="0.3" stopColor="#fff" stopOpacity="0.06" />
+          <stop offset="0.55" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity="0.45" />
         </linearGradient>
+        {(Object.keys(MAT) as (keyof typeof MAT)[]).map((k) => (
+          <linearGradient key={k} id={`${id}${k}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={MAT[k][0]} /><stop offset="0.55" stopColor={MAT[k][2]} /><stop offset="1" stopColor={MAT[k][1]} />
+          </linearGradient>
+        ))}
+        <radialGradient id={`${id}sh`}><stop offset="0" stopColor="#000" stopOpacity="0.55" /><stop offset="1" stopColor="#000" stopOpacity="0" /></radialGradient>
         {defs}
       </defs>
+      <ellipse cx={vx + vw / 2} cy={vy + vh * 0.93} rx={vw * 0.42} ry={vh * 0.05} fill={`url(#${id}sh)`} />
+      {art.parts.map((p, i) => p.m === 'paint' ? null : (
+        <path key={'m' + i} d={p.d} fillRule={p.ev ? 'evenodd' : 'nonzero'} fill={`url(#${id}${p.m})`} stroke="rgba(0,0,0,.7)" strokeWidth="1.2" />
+      ))}
       <g clipPath={`url(#${id}c)`}>
-        {body}
-        <rect width="200" height="100" fill={`url(#${id}s)`} />
+        <g transform={`translate(${vx} ${vy}) scale(${vw / 200} ${vh / 100})`}>{body}</g>
         {gem && (
-          <rect width="60" height="140" x="-80" y="-20" fill="#fff" opacity="0.35" transform="rotate(20)">
-            <animate attributeName="x" values="-80;260" dur="2.2s" repeatCount="indefinite" />
+          <rect width={vw * 0.3} height={vh * 1.6} x={vx - vw * 0.4} y={vy - vh * 0.3} fill="#fff" opacity="0.35" transform={`rotate(20 ${vx + vw / 2} ${vy + vh / 2})`}>
+            <animate attributeName="x" values={`${vx - vw * 0.4};${vx + vw * 1.1}`} dur="2.2s" repeatCount="indefinite" />
           </rect>
         )}
+        {scratches.length > 0 && <path d={scratches.join(' ')} stroke="#c9ced6" strokeOpacity="0.55" strokeWidth="1" strokeLinecap="round" />}
+        {float > 0.45 && <rect x={vx} y={vy} width={vw} height={vh} fill="#4a3a22" opacity={(float - 0.45) * 0.45} />}
       </g>
-      {shape.details.map((d, i) => <path key={i} d={d} stroke="#000" strokeOpacity="0.35" strokeWidth="1.2" fill="none" clipPath={`url(#${id}c)`} />)}
-      <path d={shape.d} fillRule="evenodd" fill="none" stroke="rgba(0,0,0,.65)" strokeWidth="1.6" />
-      <path d={shape.d} fillRule="evenodd" fill="none" stroke="rgba(255,255,255,.18)" strokeWidth="0.6" transform="translate(0,-0.6)" />
+      {paintParts.map((p, i) => <path key={'s' + i} d={p.d} fillRule={p.ev ? 'evenodd' : 'nonzero'} fill={`url(#${id}s)`} />)}
+      {art.lines.map((d, i) => <path key={'l' + i} d={d} stroke="#000" strokeOpacity="0.4" strokeWidth="1.3" fill="none" />)}
+      {art.lines.map((d, i) => <path key={'h' + i} d={d} stroke="#fff" strokeOpacity="0.1" strokeWidth="0.8" fill="none" transform="translate(0 1.2)" />)}
+      {art.dots?.map(([x, y, r], i) => <circle key={'d' + i} cx={x} cy={y} r={r} fill={`url(#${id}metal)`} stroke="#000" strokeOpacity="0.6" />)}
+      {paintParts.map((p, i) => <path key={'o' + i} d={p.d} fillRule={p.ev ? 'evenodd' : 'nonzero'} fill="none" stroke="rgba(0,0,0,.72)" strokeWidth="1.4" />)}
     </svg>
   );
 });

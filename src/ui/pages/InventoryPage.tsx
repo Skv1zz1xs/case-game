@@ -122,7 +122,7 @@ export function ItemModal({ it, onClose }: { it: Item; onClose: () => void }) {
       <div className="modal" onClick={(e) => e.stopPropagation()} style={{ borderColor: rd.color + '66' }}>
         <div className="row"><div className="grow" style={{ color: rd.color, fontWeight: 800 }}>{rd.name}</div><button className="iconbtn" onClick={onClose}>✕</button></div>
         <div style={{ padding: '10px 0' }}>
-          <ItemArt model={s.model} finish={s.finish} color={rd.color} phase={it.pattern?.tier !== 'normal' ? it.pattern?.name : undefined}
+          <ItemArt model={s.model} finish={s.finish} color={rd.color} float={it.float} wearSeed={it.id} phase={it.pattern?.tier !== 'normal' ? it.pattern?.name : undefined}
             gem={it.pattern?.tier === 'gem' || it.pattern?.tier === 'supergem'} className="" />
         </div>
         <h2 style={{ fontSize: 18 }}>{it.st && <span style={{ color: '#ff9d3c' }}>StatTrak™ </span>}{s.model.name} | {s.skin}</h2>
