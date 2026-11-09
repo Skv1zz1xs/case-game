@@ -128,3 +128,26 @@ describe('секретные рецепты', () => {
     expect(g.p.recipes).toContain('diploma');
   });
 });
+
+describe('батлы', () => {
+  it('детерминированы по seed и честны (без комиссии)', async () => {
+    const { runBattle, prizeFor, costOf } = await import('../src/core/battle');
+    const cfg = { id: 'b1', mode: '2v2' as const, rule: 'normal' as const, cases: [{ caseId: 'arsenal', count: 3 }], seed: 12345, created: 0,
+      slots: [{ nick: 'a', bot: false }, { nick: 'b', bot: true }, { nick: 'c', bot: true }, { nick: 'd', bot: true }] };
+    const r1 = runBattle(cfg), r2 = runBattle(cfg);
+    expect(r1.totals).toEqual(r2.totals);
+    expect(r1.winners.length).toBe(2);
+    const pot = r1.drops.flat().reduce((a, i) => a + i.price, 0);
+    const paid = [0, 1, 2, 3].reduce((a, s) => a + prizeFor(cfg, r1, s).reduce((x, i) => x + i.price, 0), 0);
+    expect(paid).toBeCloseTo(pot, 2);
+    expect(costOf(cfg)).toBe(300);
+  });
+  it('«Безумный» отдаёт победу меньшему дропу', async () => {
+    const { runBattle } = await import('../src/core/battle');
+    const cfg = { id: 'b2', mode: '1v1' as const, rule: 'crazy' as const, cases: [{ caseId: 'arsenal', count: 2 }], seed: 7, created: 0,
+      slots: [{ nick: 'a', bot: false }, { nick: 'b', bot: true }] };
+    const r = runBattle(cfg);
+    expect(r.totals[r.winners[0]]).toBeLessThanOrEqual(Math.max(...r.totals));
+    expect(r.totals[r.winners[0]]).toBe(Math.min(...r.totals));
+  });
+});

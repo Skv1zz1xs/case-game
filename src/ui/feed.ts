@@ -24,6 +24,7 @@ game.hooks.push((ev, data: any) => {
   if (ev === 'free') pushFeed([data], 'фри кейс');
   if (ev === 'contract') pushFeed([data.out], 'контракт');
   if (ev === 'upgrade' && data.item) pushFeed([data.item], 'апгрейд');
+  if (ev === 'battle' && data.items?.length) pushFeed(data.items, 'батл');
 });
 
 export function useFeed() {

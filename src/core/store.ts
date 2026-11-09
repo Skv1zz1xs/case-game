@@ -9,6 +9,7 @@ import { rollUpgrade, targetAllowed, skinNear, itemWithPrice } from './upgrade';
 import { contractError, rollContractEx } from './contract';
 import type { Recipe } from '../data/recipes';
 import { rewardItem, questEvent } from './rewards';
+import { BattleCfg, costOf, runBattle, prizeFor } from './battle';
 import { hashStr } from './rng';
 
 export type AnimMode = 'full' | 'short' | 'off';
@@ -43,6 +44,7 @@ export interface Profile {
   drop: { win: number; picked: number[] };
   wheelAt: number;
   quests: { win: number; prog: Record<string, number>; got: string[] };
+  battles: { cfg: BattleCfg; done: boolean; won?: boolean; prize?: number }[];
 }
 
 export const newProfile = (nick = ''): Profile => ({
@@ -50,7 +52,7 @@ export const newProfile = (nick = ''): Profile => ({
   stats: { opened: 0, spent: 0, earned: 0, sold: 0, upgrades: 0, upgradesWon: 0, contracts: 0, battles: 0, battlesWon: 0, freeOpened: 0 },
   freeAt: 0, daily: { day: '', streak: 0 }, promos: [], xp: 0, level: 1, rakeback: 0,
   eventOpens: {}, showcase: [], achievements: [], recipes: [],
-  play: { secs: 0, got: [false, false, false] }, drop: { win: -1, picked: [] }, wheelAt: 0, quests: { win: -1, prog: {}, got: [] },
+  play: { secs: 0, got: [false, false, false] }, drop: { win: -1, picked: [] }, wheelAt: 0, quests: { win: -1, prog: {}, got: [] }, battles: [],
   settings: { sound: true, volume: 0.5, anim: 'full', fast: false },
 });
 
@@ -295,6 +297,30 @@ export class Game {
     this.emit('contract', { items, out, recipe: recipe?.id });
     this.commit();
     return { item: out, recipe, first };
+  }
+
+  // ——— батлы (создатель играет слотом 0, остальные — боты или друзья) ———
+  startBattle(cfg: BattleCfg): BattleCfg {
+    const cost = costOf(cfg);
+    if (!cfg.cases.length) throw new Error('Добавь хотя бы один кейс');
+    if (this.p.balance < cost) throw new Error('Не хватает монет');
+    this.spend(cost);
+    this.p.battles = [{ cfg, done: false }, ...this.p.battles].slice(0, 30);
+    this.p.stats = { ...this.p.stats, battles: this.p.stats.battles + 1 };
+    this.commit();
+    return cfg;
+  }
+  finishBattle(id: string, slot = 0) {
+    const b = this.p.battles.find((x) => x.cfg.id === id);
+    if (!b || b.done) return;
+    const res = runBattle(b.cfg);
+    const prize = prizeFor(b.cfg, res, slot);
+    const won = prize.length > 0;
+    if (won) this.addItems(prize);
+    this.p.battles = this.p.battles.map((x) => (x.cfg.id === id ? { ...x, done: true, won, prize: prize.reduce((a, i) => a + i.price, 0) } : x));
+    this.p.stats = { ...this.p.stats, battlesWon: this.p.stats.battlesWon + (won ? 1 : 0) };
+    this.emit('battle', { won, items: prize });
+    this.commit();
   }
 
   setSettings(s: Partial<Settings>) { this.p.settings = { ...this.p.settings, ...s }; this.commit(); }

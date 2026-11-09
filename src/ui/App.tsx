@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 import { caseById } from '../data/cases';
 import { FREE_CASE } from '../data/free';
-import { game, useProfile, useToasts, fmt } from './game';
+import { game, useProfile, useToasts } from './game';
 import { CasesPage } from './pages/CasesPage';
 import { CasePage } from './pages/CasePage';
 import { BonusPage } from './pages/BonusPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { ProfilePage } from './pages/ProfilePage';
-import { GamesPage } from './pages/GamesPage';
+import { BattlesPage } from './pages/BattlesPage';
 import { UpgradePage } from './pages/UpgradePage';
 import { ContractPage } from './pages/ContractPage';
 import { SettingsModal } from './components/SettingsModal';
 import { useNow } from './components/Countdown';
 import { Sidebar } from './components/Sidebar';
+import { AnimatedNumber } from './components/Balance';
 import { tickPlay } from '../core/rewards';
 
 type Tab = 'inv' | 'cases' | 'battles' | 'upgrade' | 'bonus' | 'profile';
@@ -29,6 +30,7 @@ function parse(): { tab: Tab; caseId?: string; sub?: string } {
   const h = location.hash.replace(/^#\/?/, '').split('/');
   if (h[0] === 'case' && h[1]) return { tab: 'cases', caseId: h[1] };
   if (h[0] === 'contract') return { tab: 'upgrade', sub: 'contract' };
+  if (h[0] === 'battle' && h[1]) return { tab: 'battles', sub: h[1] };
   if (h[0] === 'games') return { tab: 'upgrade' };
   if (TABS.some((t) => t.id === h[0]) || h[0] === 'profile') return { tab: h[0] as Tab };
   return { tab: 'cases' };
@@ -77,8 +79,8 @@ export function App() {
         <div className="head-icons">
           <button className={`qbtn${route.sub === 'contract' ? ' on' : ''}`} title="Контракты" onClick={() => go('contract')}>📜</button>
         </div>
-        <button className="bal inv" title="Стоимость инвентаря" onClick={() => go('inv')}><span className="bal-ic">🔫</span>{fmt(invValue)}</button>
-        <button className="bal" title="Баланс" onClick={() => go('bonus')}><i className="coin" />{fmt(p.balance)}</button>
+        <AnimatedNumber className="bal inv" title="Стоимость инвентаря" onClick={() => go('inv')} icon={<span className="bal-ic">🔫</span>} value={invValue} />
+        <AnimatedNumber className="bal" title="Баланс" onClick={() => go('bonus')} icon={<i className="coin" />} value={p.balance} />
         <button className="plus" title="Бесплатные монеты" onClick={() => go('bonus')}>＋</button>
         <button className="avatar" title="Профиль" onClick={() => go('profile')}>{(p.nick || '?')[0].toUpperCase()}</button>
       </header>
@@ -91,7 +93,7 @@ export function App() {
             : route.tab === 'bonus' ? <BonusPage onFree={() => go('case/free')} />
             : route.sub === 'contract' ? <ContractPage onBack={() => go('upgrade')} />
             : route.tab === 'upgrade' ? <UpgradePage onBack={() => go('cases')} onContract={() => go('contract')} />
-            : route.tab === 'battles' ? <GamesPage go={go} />
+            : route.tab === 'battles' ? <BattlesPage go={go} openId={route.sub} />
             : route.tab === 'inv' ? <InventoryPage />
             : <ProfilePage onSettings={() => setSettings(true)} />}
         </main>

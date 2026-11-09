@@ -9,6 +9,7 @@ import { CaseImg } from '../components/CaseImg';
 import { DropFx, FxState, fxTier, playDropFx } from '../components/DropFx';
 import { useNow, Countdown } from '../components/Countdown';
 import { sfx } from '../sound';
+import { floatFrom } from '../juice';
 import { HeroItem } from '../three/HeroItem';
 
 const COUNTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -58,7 +59,7 @@ export function CasePage({ c, onBack, free }: { c: CaseDef; onBack: () => void; 
     if (!result) return;
     const ids = new Set(game.p.inventory.map((i) => i.id));
     const got = game.sell(result.filter((i) => ids.has(i.id)).map((i) => i.id));
-    sfx.coin(); toast(`Продано на ${fmt(got)}`, 'good'); setResult(null);
+    sfx.coin(); floatFrom(document.querySelector('.bal:not(.inv)'), `+${fmt(got)}`); toast(`Продано на ${fmt(got)}`, 'good');
   };
 
   const tease = !!best && fxTier(best) >= 3 && p.settings.anim === 'full';
@@ -68,7 +69,7 @@ export function CasePage({ c, onBack, free }: { c: CaseDef; onBack: () => void; 
   const [epicOpen, setEpicOpen] = useState(false);
   useEffect(() => { setEpicOpen(epic); }, [result]);
   const inInv = new Set(p.inventory.map((i) => i.id));
-  const sellOne = (it: Item) => { const v = game.sell([it.id]); sfx.coin(); toast(`Продано за ${fmt(v)}`, 'good'); };
+  const sellOne = (it: Item, el?: Element | null) => { const v = game.sell([it.id]); sfx.coin(); floatFrom(el ?? null, `+${fmt(v)}`); };
   // предметы кейса по убыванию шанса, у каждого свой процент
   const byChance = useMemo(() => {
     const cnt = new Map<string, number>();
@@ -88,7 +89,7 @@ export function CasePage({ c, onBack, free }: { c: CaseDef; onBack: () => void; 
               <div className="cell" key={it.id}>
                 <ItemCard item={it} />
                 {inInv.has(it.id)
-                  ? <button className="btn" onClick={() => sellOne(it)}>Продать <i className="coin" /> {fmt(it.price)}</button>
+                  ? <button className="btn" onClick={(e) => sellOne(it, e.currentTarget)}>Продать <i className="coin" /> {fmt(it.price)}</button>
                   : <button className="btn" disabled>Продано</button>}
               </div>
             ))}
