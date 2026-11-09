@@ -36,9 +36,9 @@ export const KNIVES: WeaponModel[] = [
 ];
 
 export const GLOVES: WeaponModel[] = [
-  { id: 'gsport', name: 'Спортивные перчатки', kind: 'gloves', art: 'gloves' },
-  { id: 'gdriver', name: 'Водительские перчатки', kind: 'gloves', art: 'gloves' },
-  { id: 'gtact', name: 'Тактические перчатки', kind: 'gloves', art: 'gloves' },
+  { id: 'gsport', name: 'Спортивные перчатки', kind: 'gloves', art: 'gloves3' },
+  { id: 'gdriver', name: 'Водительские перчатки', kind: 'gloves', art: 'gloves2' },
+  { id: 'gtact', name: 'Тактические перчатки', kind: 'gloves', art: 'gloves1' },
 ];
 
 export const ALL_MODELS = [...WEAPONS, ...KNIVES, ...GLOVES];
@@ -52,18 +52,18 @@ export const KIND_NAMES: Record<WeaponKind, string> = {
 // Узоры покраски (рисуются в ui/components/ItemArt.tsx)
 export type PatternStyle =
   | 'solid' | 'fade' | 'camo' | 'damascus' | 'carbon' | 'acid' | 'hologram'
-  | 'marble' | 'tiger' | 'digital' | 'stripes' | 'galaxy' | 'lava' | 'circuit' | 'anodized' | 'graphic';
+  | 'marble' | 'tiger' | 'digital' | 'stripes' | 'galaxy' | 'lava' | 'circuit' | 'anodized' | 'graphic' | 'flames' | 'retrowave' | 'lowpoly' | 'splatter' | 'beast' | 'halftone' | 'neongrid' | 'ornament';
 
 // Чем выше редкость, тем «дороже» выглядит узор
 export const PATTERNS_BY_TIER: PatternStyle[][] = [
-  ['solid', 'camo', 'digital', 'stripes'],                 // ширпотреб
-  ['camo', 'digital', 'stripes', 'carbon', 'fade'],        // промышленное
-  ['carbon', 'fade', 'tiger', 'acid', 'anodized'],         // армейское
-  ['fade', 'graphic', 'acid', 'damascus', 'anodized'],     // запрещённое
-  ['graphic', 'marble', 'circuit', 'lava', 'fade'],        // засекреченное
-  ['graphic', 'lava', 'hologram', 'galaxy', 'marble'],     // тайное
-  ['damascus', 'marble', 'hologram', 'galaxy', 'fade', 'anodized'], // редкое
-  ['hologram', 'galaxy'],                                  // контрабанда
+  ['solid', 'camo', 'digital', 'stripes', 'halftone'],                    // ширпотреб
+  ['camo', 'digital', 'carbon', 'fade', 'lowpoly', 'ornament'],           // промышленное
+  ['anodized', 'fade', 'tiger', 'lowpoly', 'neongrid', 'splatter'],       // армейское
+  ['graphic', 'flames', 'retrowave', 'splatter', 'anodized', 'damascus'], // запрещённое
+  ['beast', 'graphic', 'retrowave', 'flames', 'marble', 'lava'],          // засекреченное
+  ['beast', 'hologram', 'galaxy', 'flames', 'retrowave', 'lava'],         // тайное
+  ['damascus', 'marble', 'galaxy', 'fade', 'anodized', 'lava'],           // редкое (ножи и перчатки)
+  ['hologram', 'galaxy', 'beast'],                                         // контрабанда
 ];
 
 // Фазы ножей: у каждого «Редкого» скина свои названия, выбираются по хешу

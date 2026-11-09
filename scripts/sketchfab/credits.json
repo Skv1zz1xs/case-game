@@ -118,5 +118,29 @@
   "url": "https://sketchfab.com/3d-models/stiletto-05c80a40e6754e0583ebce3bf285c545",
   "license": "CC Attribution",
   "license_slug": "by"
+ },
+ "gloves1": {
+  "name": "military glove",
+  "author": "alixor22",
+  "profile": "https://sketchfab.com/alixor22",
+  "url": "https://sketchfab.com/3d-models/military-glove-d1a4dee1c8594dfea92f8afe35692c13",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "gloves2": {
+  "name": "Motorcycle Glove",
+  "author": "yanix",
+  "profile": "https://sketchfab.com/yanix",
+  "url": "https://sketchfab.com/3d-models/motorcycle-glove-f986cc313fb04e5ca60b180d3ac44859",
+  "license": "CC Attribution",
+  "license_slug": "by"
+ },
+ "gloves3": {
+  "name": "fingerless glove",
+  "author": "DJMaesen",
+  "profile": "https://sketchfab.com/bumstrum",
+  "url": "https://sketchfab.com/3d-models/fingerless-glove-9f608265ed4540bdbd05f8b7a1f3f959",
+  "license": "CC Attribution",
+  "license_slug": "by"
  }
 }

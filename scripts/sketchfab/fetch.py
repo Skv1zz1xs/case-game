@@ -24,6 +24,9 @@ PICK = {
     'bayonet': 'eb61a59f65e449d2a2eabbaef76a4a43',
     'bowie': '793322ff35f9436b8c88fc56009c690e',
     'stiletto': '05c80a40e6754e0583ebce3bf285c545',
+    'gloves1': 'd1a4dee1c8594dfea92f8afe35692c13',
+    'gloves2': 'f986cc313fb04e5ca60b180d3ac44859',
+    'gloves3': '9f608265ed4540bdbd05f8b7a1f3f959',
 }
 
 

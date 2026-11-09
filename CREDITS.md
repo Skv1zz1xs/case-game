@@ -1,6 +1,6 @@
 # Авторы 3D-моделей
 
-Модели оружия — с Sketchfab, лицензия **CC BY 4.0** (https://creativecommons.org/licenses/by/4.0/).
+Модели оружия и перчаток — с Sketchfab, лицензия **CC BY 4.0** (https://creativecommons.org/licenses/by/4.0/).
 Изменения: модели выровнены, отцентрованы и масштабированы, текстуры уменьшены, тяжёлые модели упрощены; поверх родных текстур накладываются скины игры.
 
 - **AK-47S** — Frostoise (https://sketchfab.com/3d-models/ak-47s-07065c43bdb2459ca8faf7a99b075b9b), CC Attribution
@@ -18,5 +18,8 @@
 - **M9 Bayonet knife** — Michael Karel (https://sketchfab.com/3d-models/m9-bayonet-knife-eb61a59f65e449d2a2eabbaef76a4a43), CC Attribution
 - **Bowie knife** — Redpool (https://sketchfab.com/3d-models/bowie-knife-793322ff35f9436b8c88fc56009c690e), CC Attribution
 - **Stiletto** — re1monsen (https://sketchfab.com/3d-models/stiletto-05c80a40e6754e0583ebce3bf285c545), CC Attribution
+- **military glove** — alixor22 (https://sketchfab.com/3d-models/military-glove-d1a4dee1c8594dfea92f8afe35692c13), CC Attribution
+- **Motorcycle Glove** — yanix (https://sketchfab.com/3d-models/motorcycle-glove-f986cc313fb04e5ca60b180d3ac44859), CC Attribution
+- **fingerless glove** — DJMaesen (https://sketchfab.com/3d-models/fingerless-glove-9f608265ed4540bdbd05f8b7a1f3f959), CC Attribution
 
-Кейсы, фон, перчатки и запасные модели — свои (Blender-скрипты в scripts/blender).
+Кейсы, фон, скины и запасные модели — свои (скрипты в scripts/blender и src/ui/components/ItemArt.tsx).

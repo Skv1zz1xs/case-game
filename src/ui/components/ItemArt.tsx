@@ -146,6 +146,104 @@ export function paint(f: Finish, id: string): { defs: ReactElement[]; body: Reac
       for (let i = 0; i < 18; i++) body.push(<circle key={'p' + i} cx={r() * 200} cy={r() * 100} r={0.8 + r() * 1.6} fill={c} opacity={0.7} />);
       break;
     }
+    case 'flames': {
+      // языки пламени от рукояти к стволу
+      defs.push(<linearGradient key="g" id={gid} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor={c} /><stop offset="0.5" stopColor={a} /><stop offset="1" stopColor="#ffe9a8" /></linearGradient>);
+      body.push(<rect key="b" width="200" height="100" fill={b} />);
+      for (let k = 0; k < 3; k++) {
+        let d = 'M-10 100 ';
+        const base = 30 + k * 18;
+        for (let x = -10; x <= 210; x += 18) {
+          const h = base + r() * 40;
+          d += `Q${x + 6} ${100 - h * 0.6} ${x + 9} ${100 - h} Q${x + 12} ${100 - h * 0.5} ${x + 18} ${100 - h * 0.35} `;
+        }
+        d += 'L210 100 Z';
+        body.push(<path key={'f' + k} d={d} fill={k === 2 ? '#fff6c8' : `url(#${gid})`} opacity={k === 2 ? 0.5 : 0.9 - k * 0.2} transform={`translate(0 ${-k * 8}) scale(1 ${1 - k * 0.15})`} />);
+      }
+      break;
+    }
+    case 'retrowave': {
+      // закатное солнце в полоску + неоновая сетка
+      defs.push(<linearGradient key="g" id={gid} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1a0638" /><stop offset="0.55" stopColor={b} /><stop offset="1" stopColor="#05010f" /></linearGradient>,
+        <linearGradient key="s" id={gid + 's'} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ffe066" /><stop offset="1" stopColor={a} /></linearGradient>);
+      body.push(<rect key="b" width="200" height="100" fill={`url(#${gid})`} />);
+      const sx = 60 + r() * 80;
+      body.push(<circle key="sun" cx={sx} cy={48} r={26} fill={`url(#${gid}s)`} />);
+      for (let i = 0; i < 5; i++) body.push(<rect key={'sl' + i} x={sx - 30} y={50 + i * 5} width={60} height={1.4 + i * 0.5} fill="#1a0638" />);
+      for (let i = 0; i < 9; i++) body.push(<path key={'gy' + i} d={`M0 ${62 + i * i * 0.6} H200`} stroke={c} strokeWidth={0.8} opacity={0.8} />);
+      for (let i = -10; i <= 10; i++) body.push(<path key={'gx' + i} d={`M${100 + i * 4} 62 L${100 + i * 24} 104`} stroke={c} strokeWidth={0.8} opacity={0.8} />);
+      break;
+    }
+    case 'lowpoly': {
+      // треугольная мозаика
+      const cols = [a, b, c];
+      const N = 12, M = 6;
+      const pts: [number, number][][] = [];
+      for (let j = 0; j <= M; j++) { pts.push([]); for (let i = 0; i <= N; i++) pts[j].push([i * (200 / N) + (i && i < N ? (r() - 0.5) * 10 : 0), j * (100 / M) + (j && j < M ? (r() - 0.5) * 8 : 0)]); }
+      for (let j = 0; j < M; j++) for (let i = 0; i < N; i++) {
+        const [p00, p10, p01, p11] = [pts[j][i], pts[j][i + 1], pts[j + 1][i], pts[j + 1][i + 1]];
+        const k1 = Math.floor(r() * 3), k2 = Math.floor(r() * 3);
+        body.push(<path key={`t${j}_${i}a`} d={`M${p00} L${p10} L${p11} Z`} fill={cols[k1]} opacity={0.75 + r() * 0.25} />,
+          <path key={`t${j}_${i}b`} d={`M${p00} L${p11} L${p01} Z`} fill={cols[k2]} opacity={0.75 + r() * 0.25} />);
+      }
+      break;
+    }
+    case 'splatter': {
+      // брызги краски поверх светлой базы
+      body.push(<rect key="b" width="200" height="100" fill={b} />);
+      for (let i = 0; i < 14; i++) {
+        const cx = r() * 200, cy = r() * 100, rr = 4 + r() * 12, col = [a, c, '#111'][i % 3];
+        body.push(<circle key={'s' + i} cx={cx} cy={cy} r={rr} fill={col} />);
+        for (let k = 0; k < 7; k++) {
+          const an = r() * 6.28, dd = rr + r() * 14;
+          body.push(<circle key={`d${i}_${k}`} cx={cx + Math.cos(an) * dd} cy={cy + Math.sin(an) * dd} r={0.8 + r() * 2.2} fill={col} />);
+          body.push(<path key={`l${i}_${k}`} d={`M${cx} ${cy} L${cx + Math.cos(an) * dd * 0.9} ${cy + Math.sin(an) * dd * 0.9}`} stroke={col} strokeWidth={1 + r() * 2} strokeLinecap="round" />);
+        }
+      }
+      break;
+    }
+    case 'beast': {
+      // своё комикс-существо: глаза, зубастая пасть, рваные полосы
+      body.push(<rect key="b" width="200" height="100" fill={b} />);
+      for (let i = 0; i < 10; i++) body.push(<path key={'st' + i} d={`M${i * 22 - 10} 0 L${i * 22 + 8} 0 L${i * 22 - 20} 100 L${i * 22 - 38} 100 Z`} fill={i % 2 ? a : '#0b0b10'} opacity={0.85} />);
+      const fx = 70 + r() * 60;
+      body.push(<ellipse key="head" cx={fx} cy={50} rx={34} ry={30} fill={c} stroke="#0b0b10" strokeWidth={3} />);
+      for (const ex of [-13, 13]) body.push(<path key={'e' + ex} d={`M${fx + ex - 9} 40 Q${fx + ex} 30 ${fx + ex + 9} 40 Q${fx + ex} 46 ${fx + ex - 9} 40 Z`} fill="#fff" stroke="#0b0b10" strokeWidth={2} />,
+        <circle key={'p' + ex} cx={fx + ex} cy={39.5} r={2.6} fill="#0b0b10" />);
+      let teeth = `M${fx - 22} 58 `;
+      for (let i = 0; i < 8; i++) teeth += `L${fx - 22 + i * 5.5 + 2.75} ${i % 2 ? 66 : 64} L${fx - 22 + (i + 1) * 5.5} 58 `;
+      body.push(<path key="mouth" d={`M${fx - 24} 56 Q${fx} 78 ${fx + 24} 56 Z`} fill="#3a0010" stroke="#0b0b10" strokeWidth={2.5} />,
+        <path key="teeth" d={teeth} fill="#fff" stroke="#0b0b10" strokeWidth={1} />);
+      break;
+    }
+    case 'halftone': {
+      // растровые точки: от крупных к мелким
+      body.push(<rect key="b" width="200" height="100" fill={a} />);
+      for (let y = 0; y < 100; y += 5) for (let x = 0; x < 200; x += 5) {
+        const k = x / 200;
+        body.push(<circle key={`h${x}_${y}`} cx={x + 2.5 + (y % 10 ? 2.5 : 0)} cy={y + 2.5} r={0.4 + 2.2 * (1 - k)} fill={b} />);
+      }
+      body.push(<rect key="c" x={0} y={44} width={200} height={10} fill={c} opacity={0.9} />);
+      break;
+    }
+    case 'neongrid': {
+      body.push(<rect key="b" width="200" height="100" fill="#07060f" />);
+      for (let i = 0; i <= 20; i++) body.push(<path key={'v' + i} d={`M${i * 10} 0 V100`} stroke={a} strokeWidth={0.6} opacity={0.6} />);
+      for (let i = 0; i <= 10; i++) body.push(<path key={'h' + i} d={`M0 ${i * 10} H200`} stroke={c} strokeWidth={0.6} opacity={0.6} />);
+      for (let i = 0; i < 16; i++) { const x = Math.floor(r() * 20) * 10, y = Math.floor(r() * 10) * 10; body.push(<rect key={'q' + i} x={x} y={y} width={10} height={10} fill={i % 2 ? a : c} opacity={0.7} />); }
+      break;
+    }
+    case 'ornament': {
+      // восточный орнамент: повторяющиеся завитки
+      defs.push(<pattern key="p" id={gid} width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect width="20" height="20" fill={b} />
+        <path d="M10 2 Q16 6 10 10 Q4 14 10 18" stroke={a} strokeWidth="1.6" fill="none" />
+        <path d="M2 10 Q6 4 10 10 Q14 16 18 10" stroke={c} strokeWidth="1.2" fill="none" />
+        <circle cx="10" cy="10" r="1.8" fill={a} />
+      </pattern>);
+      body.push(<rect key="b" width="200" height="100" fill={`url(#${gid})`} />);
+      break;
+    }
     case 'circuit': {
       body.push(<rect key="b" width="200" height="100" fill={b} />);
       for (let i = 0; i < 26; i++) {
@@ -180,7 +278,7 @@ interface Props {
 
 export const ItemArt = memo(function ItemArt({ model, finish, color, phase, gem, float = 0.1, wearSeed, className }: Props) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const art = ARTS[model.art] ?? ARTS.ak;
+  const art = ARTS[model.art] ?? (model.kind === 'gloves' ? ARTS.gloves : ARTS.ak);
   const [vx, vy, vw, vh] = art.vb;
   const f: Finish = phase && PHASE_PALETTES[phase] ? { ...finish, colors: PHASE_PALETTES[phase] } : finish;
   const { defs, body } = paint(f, id);
