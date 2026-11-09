@@ -10,8 +10,10 @@ import { THEMES, ThemeDef, GENERIC_NAMES, CaseCat } from './themes';
 import { CUSTOM_SKINS } from './customSkins';
 import { ALL_MODELS } from './weapons';
 
+export interface Scheme { sec: string; acc: string; secKind: 0 | 1 | 2; accKind: 0 | 1 | 2 } // 0 мат, 1 лак, 2 металл
 export interface Finish {
   style: PatternStyle;
+  scheme?: Scheme;      // цвета частей: второстепенные детали и акценты
   image?: string;        // свой скин-картинка (из Figma): путь от корня сайта, напр. 'skins/my.png'
   colors: [string, string, string];
   seed: number;
@@ -76,6 +78,25 @@ function makePhases(rng: Rng, phaseNames: typeof PHASE_NAMES) {
   };
 }
 
+// Схема частей: второстепенные детали — тёмные/светлые/цвет темы; акценты — от простых к золоту и хрому по редкости
+// Подобранные сочные палитры: половина скинов берёт их вместо палитры темы
+const CURATED: [string, string, string][] = [
+  ['#ff2d55', '#1a0b2e', '#ffd60a'], ['#00f5d4', '#3a0ca3', '#f72585'], ['#ff9f1c', '#2b2d42', '#e71d36'], ['#06d6a0', '#073b4c', '#ffd166'],
+  ['#7209b7', '#0b0b14', '#4cc9f0'], ['#ff006e', '#3a86ff', '#ffbe0b'], ['#e63946', '#1d3557', '#f1faee'], ['#80ffdb', '#5390d9', '#6930c3'],
+  ['#fb5607', '#14213d', '#fca311'], ['#d00000', '#03071e', '#ffba08'], ['#2ec4b6', '#011627', '#ff3366'], ['#b5179e', '#120f2a', '#f9c80e'],
+  ['#38b000', '#081c15', '#ccff33'], ['#ef476f', '#26547c', '#ffd166'], ['#9b5de5', '#00bbf9', '#fee440'], ['#ff595e', '#1982c4', '#8ac926'],
+  ['#c77dff', '#10002b', '#e0aaff'], ['#00b4d8', '#03045e', '#90e0ef'], ['#f94144', '#277da1', '#f9c74f'], ['#ffd700', '#1c1c1c', '#c0c0c0'],
+];
+const GOLD = '#d9a83a', CHROME = '#d5dbe3', BLACK = '#121316', WHITE = '#e9eaee', GUNMETAL = '#3a3f48';
+function makeScheme(rng: Rng, pal: string[], tier: number): Scheme {
+  const pk = () => pal[Math.floor(rng() * pal.length)];
+  const secOpts = [BLACK, BLACK, GUNMETAL, WHITE, pk(), pk()];
+  const accOpts = tier >= 5 ? [GOLD, CHROME, pk(), GOLD] : tier >= 3 ? [CHROME, pk(), GOLD, BLACK] : [BLACK, GUNMETAL, pk()];
+  const sec = secOpts[Math.floor(rng() * secOpts.length)];
+  const acc = accOpts[Math.floor(rng() * accOpts.length)];
+  return { sec, acc, secKind: (rng() < 0.5 ? 0 : rng() < 0.6 ? 1 : 2) as 0 | 1 | 2, accKind: (acc === GOLD || acc === CHROME ? 2 : 1) as 0 | 1 | 2 };
+}
+
 export function buildCase(t: ThemeDef): CaseDef {
   const rng = mulberry32(hashStr(t.id));
   const rtp = t.rtp ?? RTP[t.cat];
@@ -106,7 +127,7 @@ export function buildCase(t: ThemeDef): CaseDef {
       const k = n === 1 ? 0.5 : i / (n - 1);
       const mult = r.min + (r.max - r.min) * k;
       const styles = PATTERNS_BY_TIER[tier];
-      const pal = t.palette;
+      const pal = rng() < 0.5 ? t.palette : CURATED[Math.floor(rng() * CURATED.length)];
       const c = (j: number) => pal[(Math.floor(rng() * pal.length) + j) % pal.length];
       skins.push({
         id: `${t.id}:${r.id}:${i}`,
@@ -115,7 +136,7 @@ export function buildCase(t: ThemeDef): CaseDef {
         skin: nameFor(tier),
         rarity: r.id,
         base: mult, // временно: множитель цены кейса
-        finish: { style: styles[Math.floor(rng() * styles.length)], colors: [c(0), c(1), c(2)], seed: Math.floor(rng() * 1e9) },
+        finish: { style: styles[Math.floor(rng() * styles.length)], colors: [c(0), c(1), c(2)], seed: Math.floor(rng() * 1e9), scheme: makeScheme(rng, pal, tier) },
         phases: r.id === 'rare' ? makePhases(rng, PHASE_NAMES) : undefined,
       });
     });

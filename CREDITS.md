@@ -23,3 +23,7 @@
 - **fingerless glove** — DJMaesen (https://sketchfab.com/3d-models/fingerless-glove-9f608265ed4540bdbd05f8b7a1f3f959), CC Attribution
 
 Кейсы, фон, скины и запасные модели — свои (скрипты в scripts/blender и src/ui/components/ItemArt.tsx).
+
+## Фактуры (Poly Haven, CC0)
+Микрофактуры под краской скинов — с https://polyhaven.com (лицензия CC0, указание авторов не обязательно, но оставляем):
+metal_plate, marble_01, brown_leather, american_walnut_veneer, green_metal_rust. Подробности — public/tex/credits.json.

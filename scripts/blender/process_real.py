@@ -21,6 +21,58 @@ def src_path(k):
     return g[0] if g else None
 
 
+def assign_roles(o):
+    # Роли частей для скина: 0 основная, 1 второстепенная, 2 акцент (мелочь), 3 металл (длинное тонкое).
+    # Пишутся в цвет вершин: R = роль/3, G = номер части (для разброса оттенков).
+    import bmesh
+    bm = bmesh.new(); bm.from_mesh(o.data)
+    bm.faces.ensure_lookup_table()
+    # детали = связные группы граней; вершины в одной точке считаются общими (швы развёртки не режут)
+    parent = list(range(len(bm.faces)))
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]; x = parent[x]
+        return x
+    owner = {}
+    for f in bm.faces:
+        for v in f.verts:
+            key = (round(v.co.x, 3), round(v.co.y, 3), round(v.co.z, 3))
+            if key in owner:
+                ra, rb = find(owner[key]), find(f.index)
+                if ra != rb: parent[ra] = rb
+            else: owner[key] = f.index
+    groups = {}
+    for f in bm.faces: groups.setdefault(find(f.index), []).append(f)
+    islands = list(groups.values())
+    L = 4.0
+    info = []
+    for isl in islands:
+        vs = {v for f in isl for v in f.verts}
+        xs = [v.co.x for v in vs]; ys = [v.co.y for v in vs]; zs = [v.co.z for v in vs]
+        d = sorted([max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs)])
+        info.append((isl, d, d[0] * d[1] * d[2]))
+    vols = sorted((x[2] for x in info), reverse=True)
+    total = sum(vols) or 1
+    acc = 0; thr = vols[0] if vols else 0
+    for v in vols:
+        acc += v; thr = v
+        if acc > total * 0.6: break
+    col = o.data.color_attributes.new('Col', 'BYTE_COLOR', 'CORNER') if 'Col' not in o.data.color_attributes else o.data.color_attributes['Col']
+    roles = {0: 0, 1: 0, 2: 0, 3: 0}
+    layer = bm.loops.layers.color.get('Col') or bm.loops.layers.color.new('Col')
+    for i, (isl, d, vol) in enumerate(info):
+        if d[2] < 0.035 * L and d[1] < 0.035 * L: role = 2
+        elif d[2] > 0.25 * L and d[1] < 0.035 * L: role = 3
+        elif vol >= thr: role = 0
+        else: role = 1
+        roles[role] += 1
+        g = ((i * 97) % 255) / 255
+        for f in isl:
+            for lp in f.loops: lp[layer] = (role / 3, g, 0, 1)
+    bm.to_mesh(o.data); bm.free()
+    print('  частей', len(islands), 'роли', roles)
+
+
 def process(k):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=src_path(k))
@@ -69,9 +121,10 @@ def process(k):
         if img.size[0] > MAXT or img.size[1] > MAXT:
             s = MAXT / max(img.size)
             img.scale(max(1, int(img.size[0] * s)), max(1, int(img.size[1] * s)))
+    assign_roles(o)
     out = os.path.join(OUT, f'{k}.glb')
     bpy.ops.export_scene.gltf(filepath=out, export_format='GLB', export_image_format='JPEG', export_jpeg_quality=85,
-                              export_yup=True, export_apply=True)
+                              export_yup=True, export_apply=True, export_vertex_color='ACTIVE', export_all_vertex_colors=False)
     print('OK', k, 'граней', len(o.data.polygons), 'размер', round(os.path.getsize(out) / 1e6, 2), 'МБ')
     return o
 
