@@ -9,6 +9,8 @@ import { InventoryPage } from './pages/InventoryPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { BattlesPage } from './pages/BattlesPage';
 import { DevSkins } from './pages/DevSkins';
+import { PassPage } from './pages/PassPage';
+import { ShopPage } from './pages/ShopPage';
 import { UpgradePage } from './pages/UpgradePage';
 import { ContractPage } from './pages/ContractPage';
 import { SettingsModal } from './components/SettingsModal';
@@ -30,6 +32,8 @@ const TABS: { id: Tab; ic: string; name: string; mob?: boolean }[] = [
 function parse(): { tab: Tab; caseId?: string; sub?: string } {
   const h = location.hash.replace(/^#\/?/, '').split('/');
   if (h[0] === 'case' && h[1]) return { tab: 'cases', caseId: h[1] };
+  if (h[0] === 'pass') return { tab: 'bonus', sub: 'pass' };
+  if (h[0] === 'shop') return { tab: 'profile', sub: 'shop' };
   if (h[0] === 'dev-skins') return { tab: 'cases', sub: 'dev-skins' };
   if (h[0] === 'contract') return { tab: 'upgrade', sub: 'contract' };
   if (h[0] === 'battle' && h[1]) return { tab: 'battles', sub: h[1] };
@@ -79,7 +83,9 @@ export function App() {
         </nav>
         <div className="spacer" />
         <div className="head-icons">
+          <button className={`qbtn${route.sub === 'shop' ? ' on' : ''}`} title="Магазин" onClick={() => go('shop')}>🏪</button>
           <button className={`qbtn${route.sub === 'contract' ? ' on' : ''}`} title="Контракты" onClick={() => go('contract')}>📜</button>
+          <button className={`qbtn${route.sub === 'pass' ? ' on' : ''}`} title="Батл-пасс" onClick={() => go('pass')}>🏅</button>
         </div>
         <AnimatedNumber className="bal inv" title="Стоимость инвентаря" onClick={() => go('inv')} icon={<span className="bal-ic">🔫</span>} value={invValue} />
         <AnimatedNumber className="bal" title="Баланс" onClick={() => go('bonus')} icon={<i className="coin" />} value={p.balance} />
@@ -90,7 +96,7 @@ export function App() {
       <div className="layout">
         <Sidebar go={go} />
         <main className="main">
-          {route.sub === 'dev-skins' ? <DevSkins /> : c ? <CasePage key={c.id} c={c} free={c.id === 'free'} onBack={() => go('cases')} />
+          {route.sub === 'dev-skins' ? <DevSkins /> : route.sub === 'pass' ? <PassPage /> : route.sub === 'shop' ? <ShopPage /> : c ? <CasePage key={c.id} c={c} free={c.id === 'free'} onBack={() => go('cases')} />
             : route.tab === 'cases' ? <CasesPage onOpen={(id) => go('case/' + id)} onBonus={() => go('bonus')} />
             : route.tab === 'bonus' ? <BonusPage onFree={() => go('case/free')} />
             : route.sub === 'contract' ? <ContractPage onBack={() => go('upgrade')} />

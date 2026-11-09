@@ -1,6 +1,6 @@
 // Левая колонка (ПК): онлайн, батл-пасс, живая лента дропов
 import { useState } from 'react';
-import { rarityDef } from '../../config/economy';
+import { rarityDef, passXpNeed } from '../../config/economy';
 import { skinById } from '../../data/cases';
 import { useProfile, fmt } from '../game';
 import { useFeed } from '../feed';
@@ -14,9 +14,9 @@ export function Sidebar({ go }: { go: (p: string) => void }) {
   return (
     <aside className="side">
       <div className="side-online"><span className="pulse" />1 <span className="muted small">онлайн</span></div>
-      <button className="side-bp" onClick={() => go('bonus')}>
-        <div><b>БАТЛ-ПАСС</b><div className="accent">СЕЗОН 1</div><div className="small muted">ур. {p.level}</div></div>
-        <div className="bp-bar"><div style={{ width: '35%' }} /></div>
+      <button className="side-bp" onClick={() => go('pass')}>
+        <div><b>БАТЛ-ПАСС</b><div className="accent">СЕЗОН 1</div><div className="small muted">ур. {p.pass.level}{p.pass.premium ? ' · PREMIUM' : ''}</div></div>
+        <div className="bp-bar"><div style={{ width: `${Math.min(100, (p.pass.xp / passXpNeed(p.pass.level)) * 100)}%` }} /></div>
       </button>
       <div className="side-tabs">
         <button className={tab === 'all' ? 'on' : ''} onClick={() => setTab('all')}>▦</button>

@@ -8,8 +8,9 @@ export function useNow(ms = 1000) {
 
 export function fmtLeft(ms: number) {
   const s = Math.max(0, Math.ceil(ms / 1000));
-  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
   const pad = (x: number) => String(x).padStart(2, '0');
+  if (d) return `${d}д ${pad(h)}:${pad(m)}`;
   return h ? `${h}:${pad(m)}:${pad(ss)}` : `${pad(m)}:${pad(ss)}`;
 }
 

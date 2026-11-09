@@ -9,6 +9,7 @@ import { useFeed } from '../feed';
 import { ItemCard } from '../components/ItemCard';
 import { Inspect3D } from '../three/Inspect3D';
 import { InventoryPage } from './InventoryPage';
+import { cosmeticById } from '../../data/cosmetics';
 
 export function ProfilePage({ onSettings }: { onSettings: () => void }) {
   const p = useProfile();
@@ -24,11 +25,11 @@ export function ProfilePage({ onSettings }: { onSettings: () => void }) {
   return (
     <div>
       <div className="prof-top">
-        <div className="prof-card">
+        <div className="prof-card" style={cosmeticById(p.cos.bg) ? { background: cosmeticById(p.cos.bg)!.css } : undefined}>
           <div className="prof-head">
-            <div className="prof-ava">{(p.nick || '?')[0].toUpperCase()}</div>
+            <div className="prof-ava" style={cosmeticById(p.cos.frame) ? { boxShadow: `0 0 0 3px ${cosmeticById(p.cos.frame)!.css}, 0 0 18px ${cosmeticById(p.cos.frame)!.css}` } : undefined}>{(p.nick || '?')[0].toUpperCase()}</div>
             <div className="grow" style={{ minWidth: 0 }}>
-              <div className="row"><h1 style={{ fontSize: 22 }} className="grow">{p.nick}</h1><button className="btn sm" onClick={onSettings}>⚙️</button></div>
+              <div className="row"><h1 style={{ fontSize: 22 }}>{p.nick}</h1>{cosmeticById(p.cos.title) && <span className="tag-title" style={{ background: cosmeticById(p.cos.title)!.css }}>{cosmeticById(p.cos.title)!.name}</span>}<span className="grow" /><button className="btn sm" onClick={onSettings}>⚙️</button></div>
               <div className="small muted">ID:{id}</div>
               <div className="prof-rank"><span className="rank-badge">{p.level}</span>
                 <div className="grow"><div className="small muted" style={{ textAlign: 'right' }}>уровень · {fmt(p.xp)} / {fmt(need)} XP</div>

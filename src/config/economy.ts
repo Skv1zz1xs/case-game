@@ -149,3 +149,14 @@ export const WHEEL_SEGMENTS: { value: number; weight: number; skin?: boolean }[]
 ];
 // Задания: новый набор каждые 3 часа
 export const QUEST_HOURS = 3;
+
+// ——— Батл-пасс ———
+export const PASS_LEVELS = 60;
+export const PASS_SEASON_END = '2027-01-01T00:00:00Z';
+export const PASS_PREMIUM_PRICE = 20000;           // монеты; реальных денег нет
+export const passXpNeed = (lvl: number) => 300 + lvl * 60; // XP с уровня lvl на lvl+1
+export const passXpForCase = (price: number) => Math.max(1, Math.min(60, Math.round(price / 20))); // 1–60 XP за кейс
+export const PASS_XP_DAILY_LOGIN = 100;
+
+// ——— Магазин косметики (только за монеты) ———
+export const SHOP_PRICES = { bg: [5000, 15000, 40000, 100000], frame: [3000, 10000, 25000, 60000], title: [2000, 6000, 15000, 50000] };

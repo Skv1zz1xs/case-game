@@ -4,12 +4,18 @@ import { CaseDef, caseById, eventWindow, skinById } from '../data/cases';
 import { FREE_CASE_TABLE } from '../config/economy';
 import { FREE_SKINS } from '../data/free';
 import { Item, openCase, round2 } from './items';
+import { itemWithPrice } from './upgrade';
+import { skinById as skinOf } from '../data/cases';
+const rewardItemSkin = (skinId: string, value: number, rng: Rng, ts: number) => ({ ...itemWithPrice(skinOf(skinId)!, value, rng, 'pass', ts), rarity: skinOf(skinId)!.rarity });
 import { Rng, rand, uid, weighted, randRange } from './rng';
-import { rollUpgrade, targetAllowed, skinNear, itemWithPrice } from './upgrade';
+import { rollUpgrade, targetAllowed, skinNear } from './upgrade';
 import { contractError, rollContractEx } from './contract';
 import type { Recipe } from '../data/recipes';
 import { rewardItem, questEvent } from './rewards';
 import { BattleCfg, costOf, runBattle, prizeFor } from './battle';
+import { PASS_TRACK, PassReward } from '../data/battlepass';
+import { cosmeticById } from '../data/cosmetics';
+import { caseById as caseOf } from '../data/cases';
 import { hashStr } from './rng';
 
 export type AnimMode = 'full' | 'short' | 'off';
@@ -45,6 +51,8 @@ export interface Profile {
   wheelAt: number;
   quests: { win: number; prog: Record<string, number>; got: string[] };
   battles: { cfg: BattleCfg; done: boolean; won?: boolean; prize?: number }[];
+  pass: { xp: number; level: number; premium: boolean; claimed: string[] };
+  cos: { owned: string[]; bg?: string; frame?: string; title?: string };
 }
 
 export const newProfile = (nick = ''): Profile => ({
@@ -53,6 +61,7 @@ export const newProfile = (nick = ''): Profile => ({
   freeAt: 0, daily: { day: '', streak: 0 }, promos: [], xp: 0, level: 1, rakeback: 0,
   eventOpens: {}, showcase: [], achievements: [], recipes: [],
   play: { secs: 0, got: [false, false, false] }, drop: { win: -1, picked: [] }, wheelAt: 0, quests: { win: -1, prog: {}, got: [] }, battles: [],
+  pass: { xp: 0, level: 0, premium: false, claimed: [] }, cos: { owned: [] },
   settings: { sound: true, volume: 0.5, anim: 'full', fast: false },
 });
 
@@ -152,6 +161,7 @@ export class Game {
     const items: Item[] = [];
     for (let i = 0; i < n; i++) items.push(openCase(c, this.rng, t + i, 'case'));
     this.p.stats = { ...this.p.stats, opened: this.p.stats.opened + n };
+    this.addPassXp(E.passXpForCase(c.price) * n);
     this.addItems(items);
     this.emit('open', { caseId, n, items });
     this.commit();
@@ -223,6 +233,7 @@ export class Game {
     this.p.daily = { day: dayKey(this.now()), streak: d.streak };
     if (d.type === 'skin') this.addItems([rewardItem(d.amount, hashStr(this.p.nick + ':streak:' + this.p.daily.day), this.now(), 'pass')]);
     else this.addCoins(d.amount);
+    this.addPassXp(E.PASS_XP_DAILY_LOGIN);
     this.emit('daily');
     this.commit();
     return d.amount;
@@ -320,6 +331,65 @@ export class Game {
     this.p.battles = this.p.battles.map((x) => (x.cfg.id === id ? { ...x, done: true, won, prize: prize.reduce((a, i) => a + i.price, 0) } : x));
     this.p.stats = { ...this.p.stats, battlesWon: this.p.stats.battlesWon + (won ? 1 : 0) };
     this.emit('battle', { won, items: prize });
+    this.commit();
+  }
+
+  // ——— батл-пасс ———
+  addPassXp(x: number) {
+    const ps = { ...this.p.pass };
+    ps.xp += x;
+    while (ps.level < E.PASS_LEVELS && ps.xp >= E.passXpNeed(ps.level)) { ps.xp -= E.passXpNeed(ps.level); ps.level++; }
+    if (ps.level >= E.PASS_LEVELS) ps.xp = 0;
+    if (ps.level !== this.p.pass.level) this.notify({ kind: 'level', text: `Батл-пасс: уровень ${ps.level}!` });
+    this.p.pass = ps;
+  }
+  givePassReward(r: PassReward) {
+    if (r.kind === 'coins') this.addCoins(r.value);
+    else if (r.kind === 'case') { const c = caseOf(r.caseId)!; this.addItems([openCase(c, this.rng, this.now(), 'pass')]); }
+    else this.addItems([rewardItemSkin(r.skinId, r.value, this.rng, this.now())]);
+  }
+  claimPass(level: number, track: 'free' | 'prem') {
+    const key = `${level}:${track}`;
+    const row = PASS_TRACK[level - 1];
+    const r = track === 'free' ? row.free : row.prem;
+    if (!r) throw new Error('Здесь нет награды');
+    if (this.p.pass.level < level) throw new Error('Уровень ещё не открыт');
+    if (track === 'prem' && !this.p.pass.premium) throw new Error('Нужен Premium');
+    if (this.p.pass.claimed.includes(key)) throw new Error('Уже получено');
+    this.givePassReward(r);
+    this.p.pass = { ...this.p.pass, claimed: [...this.p.pass.claimed, key] };
+    this.commit();
+  }
+  claimAllPass(): number {
+    let n = 0;
+    for (let l = 1; l <= this.p.pass.level; l++) for (const t of ['free', 'prem'] as const) {
+      const r = t === 'free' ? PASS_TRACK[l - 1].free : PASS_TRACK[l - 1].prem;
+      if (!r || (t === 'prem' && !this.p.pass.premium) || this.p.pass.claimed.includes(`${l}:${t}`)) continue;
+      this.givePassReward(r); this.p.pass = { ...this.p.pass, claimed: [...this.p.pass.claimed, `${l}:${t}`] }; n++;
+    }
+    this.commit();
+    return n;
+  }
+  buyPremium() {
+    if (this.p.pass.premium) throw new Error('Premium уже есть');
+    if (this.p.balance < E.PASS_PREMIUM_PRICE) throw new Error('Не хватает монет');
+    this.spend(E.PASS_PREMIUM_PRICE);
+    this.p.pass = { ...this.p.pass, premium: true };
+    this.commit();
+  }
+  // ——— магазин косметики ———
+  buyCosmetic(id: string) {
+    const c = cosmeticById(id);
+    if (!c) throw new Error('Нет такого товара');
+    if (this.p.cos.owned.includes(id)) throw new Error('Уже куплено');
+    if (this.p.balance < c.price) throw new Error('Не хватает монет');
+    this.spend(c.price);
+    this.p.cos = { ...this.p.cos, owned: [...this.p.cos.owned, id], [c.kind]: id };
+    this.commit();
+  }
+  equipCosmetic(kind: 'bg' | 'frame' | 'title', id?: string) {
+    if (id && !this.p.cos.owned.includes(id)) throw new Error('Сначала купи');
+    this.p.cos = { ...this.p.cos, [kind]: id };
     this.commit();
   }
 
