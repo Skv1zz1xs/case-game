@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import type { WeaponModel } from '../../data/weapons';
 import type { Finish } from '../../data/cases';
-import { buildModel, makeStage, frame, THUMB_POSE, webglOk } from './render3d';
+import { buildModel, makeStage, frame, THUMB_POSE, webglOk, studioReady } from './render3d';
 import { ItemArt } from '../components/ItemArt';
 
 interface Props { model: WeaponModel; finish: Finish; phase?: string; float?: number; wearSeed?: string; color?: string; intro?: boolean }
@@ -16,6 +16,7 @@ export function Inspect3D(p: Props) {
     const canvas = document.createElement('canvas');
     el.prepend(canvas);
     const st = makeStage(canvas);
+    studioReady(st);
     const dpr = Math.min(2, devicePixelRatio || 1);
     let model: THREE.Group | null = null;
     let raf = 0, alive = true;

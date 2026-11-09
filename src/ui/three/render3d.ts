@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { ARTS, Art, Mat } from '../components/weaponArt';
 import { paintSkin, wearMap, FINISH_KIND, PER_PART } from './skinPainter';
 import type { Finish } from '../../data/cases';
@@ -315,18 +316,37 @@ async function buildReal(src: THREE.Object3D, key: string, finish: Finish, o: Mo
 }
 
 // ——— сцена ———
+// Студийное освещение: HDRI-фото студии (Poly Haven, CC0). Пока грузится — запасная «комната».
+let hdrData: Promise<THREE.DataTexture | null> | null = null;
+function loadStudio() {
+  if (!hdrData) hdrData = new RGBELoader().loadAsync(((import.meta as any).env?.BASE_URL ?? './') + 'tex/studio_small_09_1k.hdr')
+    .then((t) => { t.mapping = THREE.EquirectangularReflectionMapping; return t; }).catch(() => null);
+  return hdrData;
+}
+export async function studioReady(st: { renderer: THREE.WebGLRenderer; scene: THREE.Scene }) {
+  if (st.scene.userData.studio) return;
+  const t = await loadStudio();
+  if (!t) return;
+  const pm = new THREE.PMREMGenerator(st.renderer);
+  st.scene.environment = pm.fromEquirectangular(t).texture;
+  st.scene.environmentRotation = new THREE.Euler(0, Math.PI * 0.35, 0);
+  st.scene.environmentIntensity = 1.0;
+  st.scene.userData.studio = true;
+  pm.dispose();
+}
+
 export function makeStage(canvas?: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: !canvas });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.15;
+  renderer.toneMappingExposure = 1.05;
   const scene = new THREE.Scene();
   const pm = new THREE.PMREMGenerator(renderer);
   scene.environment = pm.fromScene(new RoomEnvironment(), 0.02).texture;
   scene.environmentIntensity = 1.25;
-  const key = new THREE.DirectionalLight(0xffffff, 1.8); key.position.set(-2, 3, 4); scene.add(key);
-  const rim = new THREE.DirectionalLight(0x9ec3ff, 1.1); rim.position.set(3, 1, -3); scene.add(rim);
-  const fill = new THREE.DirectionalLight(0xffe2c4, 0.5); fill.position.set(2, -2, 3); scene.add(fill);
+  const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(-2, 3, 4); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xbfd8ff, 1.4); rim.position.set(3, 2, -3); scene.add(rim);
+  const top = new THREE.DirectionalLight(0xffffff, 0.6); top.position.set(0, 5, 1); scene.add(top);
   const camera = new THREE.PerspectiveCamera(20, 2, 1, 5000);
   return { renderer, scene, camera };
 }
@@ -368,6 +388,7 @@ export function renderThumb(model: WeaponModel, finish: Finish, o: ModelOpts = {
         const c = document.createElement('canvas');
         c.width = TW; c.height = TH;
         stage = makeStage(c);
+        await studioReady(stage);
         stage.renderer.setSize(TW, TH, false);
       }
       const m = await buildModel(model, finish, o);
