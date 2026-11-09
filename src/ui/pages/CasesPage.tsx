@@ -24,7 +24,7 @@ export function CasesPage({ onOpen, onBonus }: { onOpen: (id: string) => void; o
         <div className="section-h"><h2>Бесплатные кейсы</h2></div>
         <div className="case-grid">
           <button className="case-card" style={{ ['--c1' as any]: FREE_CASE.palette[0] }} onClick={() => onOpen('free')}>
-            <div className="cimg"><CaseImg c={FREE_CASE} /><span className="glyph-badge">{FREE_CASE.glyph}</span></div>
+            <div className="cimg"><CaseImg c={FREE_CASE} /></div>
             <div className="cinfo"><div className="ttl">Бесплатный кейс</div>
               <div className="price" style={{ color: 'var(--good)' }}>{freeLeft > 0 ? <>через <Countdown to={p.freeAt} now={now} /></> : 'БЕСПЛАТНО'}</div></div>
           </button>
@@ -52,7 +52,7 @@ export function CasesPage({ onOpen, onBonus }: { onOpen: (id: string) => void; o
                     {ev && <span className={`badge${ev.active ? ' hot' : ''}`}>{ev.active ? <>⏳ <Countdown to={ev.end} now={now} /></> : <>🔒 <Countdown to={ev.start} now={now} /></>}</span>}
                     {c.cat === 'elite' && <span className="badge vip">ЭЛИТ</span>}
                     {(c.cat === 'theme' || c.cat === 'knife') && c.price >= 40 && c.price <= 900 && <span className="badge new">НОВОЕ</span>}
-                    <div className="cimg"><CaseImg c={c} /><span className="glyph-badge">{c.glyph}</span></div>
+                    <div className="cimg"><CaseImg c={c} /></div>
                     <div className="cinfo">
                       <div className="ttl">{c.name}</div>
                       <div className="price">{ev && ev.active ? <span className="muted small">осталось {(c.limit ?? 0) - used}/{c.limit} · </span> : null}<i className="coin" />{fmt(c.price)}</div>

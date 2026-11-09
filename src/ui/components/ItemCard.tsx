@@ -32,7 +32,7 @@ export const ItemCard = memo(function ItemCard({ item, skin, priceText, compact,
         {item && !compact && (
           <div className="meta">
             <span>{wearName(item.float).short}</span>
-            {item.st && <span className="st">ST</span>}
+            {item.st && <span className="st">{s.model.kind === 'sticker' ? 'ГОЛО' : 'ST'}</span>}
             {item.pattern && item.pattern.tier !== 'normal' && <span className={gem ? 'gem' : ''}>{item.pattern.name}</span>}
           </div>
         )}
@@ -42,7 +42,7 @@ export const ItemCard = memo(function ItemCard({ item, skin, priceText, compact,
         <ItemView model={s.model} finish={s.finish} color={rd.color} float={item?.float} wearSeed={item?.id} phase={item?.pattern?.tier !== 'normal' ? item?.pattern?.name : undefined} gem={!!gem} />
       </div>
       <div className="cap">
-        <div className="nm">{item?.st ? 'StatTrak™ ' : ''}{s.model.kind === 'knife' || s.model.kind === 'gloves' ? '★ ' : ''}{s.model.name}</div>
+        <div className="nm">{item?.st && s.model.kind !== 'sticker' ? 'StatTrak™ ' : ''}{s.model.kind === 'knife' || s.model.kind === 'gloves' ? '★ ' : ''}{s.model.name}</div>
         <div className="sk">{s.skin}</div>
       </div>
     </Tag>

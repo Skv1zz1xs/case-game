@@ -473,3 +473,32 @@ body { background: #1c1d21; }
 .reel-grid .reel-wrap::after { width: 34%; }
 .case-stage .big-case { -webkit-mask-image: radial-gradient(ellipse 58% 62% at 50% 52%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 58% 62% at 50% 52%, #000 62%, transparent 100%); }
 .open-panel .btn { text-transform: uppercase; font-size: 13px; }
+
+/* ——— Вступление открытия: тряска, свечение, вспышка ——— */
+.case-stage.opening .big-case { animation: caseopen 0.75s cubic-bezier(.36, .07, .19, .97) both; }
+@keyframes caseopen {
+  0% { transform: scale(1); filter: drop-shadow(0 34px 30px rgba(0, 0, 0, 0.6)); }
+  15% { transform: scale(1.03) rotate(-2deg); }
+  30% { transform: scale(1.05) rotate(2.5deg); }
+  45% { transform: scale(1.07) rotate(-3deg); filter: drop-shadow(0 0 30px rgba(255, 240, 200, 0.6)) brightness(1.15); }
+  60% { transform: scale(1.09) rotate(3deg); }
+  80% { transform: scale(1.14) rotate(0); filter: drop-shadow(0 0 60px rgba(255, 240, 200, 0.9)) brightness(1.5); }
+  100% { transform: scale(1.4); opacity: 0; filter: brightness(3) blur(4px); }
+}
+.open-flash { position: absolute; inset: 0; z-index: 4; pointer-events: none; background: radial-gradient(circle at 50% 55%, rgba(255, 248, 225, 0.95), rgba(255, 248, 225, 0) 55%); animation: openflash 0.75s ease-in forwards; }
+@keyframes openflash { 0%, 70% { opacity: 0; } 88% { opacity: 1; } 100% { opacity: 0.6; } }
+.reel-grid { animation: reelsin 0.35s ease-out; }
+@keyframes reelsin { from { opacity: 0; transform: scale(0.94); } }
+/* наведение на плитки: подсветка цветом редкости */
+.item { transition: transform 0.18s ease; }
+button.item:hover, .case-items .item:hover { transform: translateY(-3px); }
+button.item:hover .tile, .case-items .item:hover .tile { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), inset 0 -40px 40px -30px color-mix(in srgb, var(--rc) 60%, transparent); }
+.case-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.case-card:hover .cimg img { transform: scale(1.06) translateY(-4px); filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.5)); }
+/* наклейки */
+.art3d.sticker { display: grid; place-items: center; }
+.art3d.sticker img { width: 64%; height: auto; object-fit: contain; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35)); transform: rotate(-6deg); }
+.item .tile .art3d.sticker { width: 80%; }
+.inspect .art3d.sticker { width: 100%; height: 100%; }
+.inspect .art3d.sticker img { width: 60%; animation: stickerwobble 4s ease-in-out infinite; }
+@keyframes stickerwobble { 0%, 100% { transform: rotate(-6deg) scale(1); } 50% { transform: rotate(4deg) scale(1.04); } }

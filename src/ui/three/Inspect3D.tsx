@@ -5,13 +5,14 @@ import type { WeaponModel } from '../../data/weapons';
 import type { Finish } from '../../data/cases';
 import { buildModel, makeStage, frame, THUMB_POSE, webglOk, studioReady } from './render3d';
 import { ItemArt } from '../components/ItemArt';
+import { StickerArt } from '../components/StickerArt';
 
 interface Props { model: WeaponModel; finish: Finish; phase?: string; float?: number; wearSeed?: string; color?: string; intro?: boolean }
 
 export function Inspect3D(p: Props) {
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!webglOk || !box.current) return;
+    if (!webglOk || !box.current || p.model.kind === 'sticker') return;
     const el = box.current;
     const canvas = document.createElement('canvas');
     el.prepend(canvas);
@@ -68,6 +69,7 @@ export function Inspect3D(p: Props) {
       st.renderer.dispose(); canvas.remove();
     };
   }, [p.model.id, p.finish.seed, p.phase, p.float, p.wearSeed]);
+  if (p.model.kind === 'sticker') return <div className="inspect"><StickerArt finish={p.finish} name={p.finish.word ?? ''} big /></div>;
   if (!webglOk) return <ItemArt {...p} />;
   return <div ref={box} className="inspect" style={p.color ? { filter: `drop-shadow(0 6px 18px ${p.color}55)` } : undefined}><span className="hint">↔ покрути</span></div>;
 }

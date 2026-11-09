@@ -1,5 +1,5 @@
 // Модели оружия: реальные образцы (рисуются в ui/components/weaponArt.ts)
-export type WeaponKind = 'pistol' | 'smg' | 'rifle' | 'sniper' | 'shotgun' | 'mg' | 'knife' | 'gloves';
+export type WeaponKind = 'pistol' | 'smg' | 'rifle' | 'sniper' | 'shotgun' | 'mg' | 'knife' | 'gloves' | 'sticker';
 
 export interface WeaponModel {
   id: string;
@@ -41,12 +41,15 @@ export const GLOVES: WeaponModel[] = [
   { id: 'gtact', name: 'Тактические перчатки', kind: 'gloves', art: 'gloves1' },
 ];
 
-export const ALL_MODELS = [...WEAPONS, ...KNIVES, ...GLOVES];
+// Наклейки — 2D-предметы (рисуются в ui/components/StickerArt.tsx)
+export const STICKER: WeaponModel = { id: 'sticker', name: 'Наклейка', kind: 'sticker', art: 'sticker' };
+
+export const ALL_MODELS = [...WEAPONS, ...KNIVES, ...GLOVES, STICKER];
 export const modelById = (id: string) => ALL_MODELS.find((m) => m.id === id)!;
 
 export const KIND_NAMES: Record<WeaponKind, string> = {
   pistol: 'Пистолеты', smg: 'ПП', rifle: 'Винтовки', sniper: 'Снайперки',
-  shotgun: 'Дробовики', mg: 'Пулемёты', knife: 'Ножи', gloves: 'Перчатки',
+  shotgun: 'Дробовики', mg: 'Пулемёты', knife: 'Ножи', gloves: 'Перчатки', sticker: 'Наклейки',
 };
 
 // Узоры покраски (рисуются в ui/components/ItemArt.tsx)

@@ -32,12 +32,20 @@ export function CasePage({ c, onBack, free }: { c: CaseDef; onBack: () => void; 
 
   useEffect(() => { window.scrollTo(0, 0); }, [c.id]);
 
+  const [opening, setOpening] = useState(false);
   const open = () => {
-    if (spinning) return;
+    if (spinning || opening) return;
     try {
       const got = free ? [game.openFree()] : game.open(c.id, count);
+      setResult(null); setItems(null);
+      // вступление: кейс трясётся и светится, вспышка — и появляются барабаны
+      const intro = p.settings.anim === 'off' || fast ? 0 : 750;
+      setOpening(true);
       sfx.whoosh();
-      setItems(got); setDone(0); setSpinning(true); setResult(null); setSpinKey((k) => k + 1);
+      setTimeout(() => {
+        setOpening(false);
+        setItems(got); setDone(0); setSpinning(true); setSpinKey((k) => k + 1);
+      }, intro);
     } catch (e) { toast((e as Error).message, 'bad'); }
   };
 
@@ -79,11 +87,12 @@ export function CasePage({ c, onBack, free }: { c: CaseDef; onBack: () => void; 
 
   return (
     <div>
-      <div className={`case-stage${(items && spinning) || result ? ' busy' : ''}`} style={{ ['--stage-img' as any]: `url(${new URL(((import.meta as any).env?.BASE_URL ?? './') + 'stage.webp', location.href).href})` }}>
+      <div className={`case-stage${(items && spinning) || result ? ' busy' : ''}${opening ? ' opening' : ''}`} style={{ ['--stage-img' as any]: `url(${new URL(((import.meta as any).env?.BASE_URL ?? './') + 'stage.webp', location.href).href})` }}>
         <button className="btn sm stage-back" onClick={onBack}>← К кейсам</button>
         <div className="stage-logo">🎰 КЕЙС-РОЯЛЬ</div>
         <button className={`stage-snd${p.settings.sound ? '' : ' off'}`} title="Звук" onClick={() => game.setSettings({ sound: !p.settings.sound })}>{p.settings.sound ? '🔊' : '🔇'}</button>
         <CaseImg c={c} className="big-case" />
+        {opening && <div className="open-flash" />}
         {items && spinning && (
           <div className={`reel-grid n${items.length}`}>
             {items.map((it, i) => (
@@ -125,7 +134,7 @@ export function CasePage({ c, onBack, free }: { c: CaseDef; onBack: () => void; 
           <button className={`bolt${fast ? ' on' : ''}`} title="Быстрое открытие" onClick={() => game.setSettings({ fast: !fast })}>⚡</button>
           {spinning
             ? <button className="btn primary open-btn" onClick={() => setDone(items?.length ?? 0)}>Пропустить анимацию</button>
-            : <button className="btn primary open-btn" onClick={open} disabled={!!err}>
+            : <button className="btn primary open-btn" onClick={open} disabled={!!err || opening}>
                 {free ? 'Открыть бесплатно' : <>Открыть за {fmt(c.price * count)} <i className="coin" /></>}
               </button>}
         </div>
