@@ -7,7 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { ARTS, Art, Mat } from '../components/weaponArt';
-import { paintSkin, wearMap, FINISH_KIND, PER_PART } from './skinPainter';
+import { paintSkin, wearMap, FINISH_KIND, PER_PART, loadPhoto, photoFor } from './skinPainter';
 import type { Finish } from '../../data/cases';
 import type { WeaponModel } from '../../data/weapons';
 import { PHASE_PALETTES, PHASE_NAMES } from '../../data/weapons';
@@ -83,7 +83,8 @@ function skinTexture(art: Art, f: Finish, float: number, wearSeed: string): Prom
       c = document.createElement('canvas'); c.width = W; c.height = H;
       c.getContext('2d')!.drawImage(img, 0, 0, W, H);
     } else {
-      c = paintSkin(f, W, H, f.word ?? '', f.tier ?? 0);
+      const photos = f.style === 'photo' || f.style === 'photocamo' ? await Promise.all([loadPhoto(photoFor(f)), loadPhoto(photoFor(f, 1))]).catch(() => []) : [];
+      c = paintSkin(f, W, H, f.word ?? '', f.tier ?? 0, photos);
     }
     void float; void wearSeed;
     const t = new THREE.CanvasTexture(c);

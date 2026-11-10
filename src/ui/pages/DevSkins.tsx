@@ -3,7 +3,7 @@ import { WEAPONS, KNIVES, GLOVES } from '../../data/weapons';
 import type { PatternStyle } from '../../data/weapons';
 import { ItemView } from '../three/ItemView';
 
-const STYLES: PatternStyle[] = ['galaxy', 'kintsugi', 'scales', 'honeycomb', 'swirl', 'topo', 'splinter', 'hologram', 'beast', 'flames', 'graphic', 'retrowave', 'lowpoly', 'carbon', 'camo', 'marble', 'damascus', 'lava'];
+const STYLES: PatternStyle[] = ['photo', 'photocamo', 'photo', 'photocamo', 'photo', 'photocamo', 'galaxy', 'kintsugi', 'scales', 'honeycomb', 'swirl', 'topo', 'splinter', 'hologram', 'beast', 'flames', 'graphic', 'retrowave', 'lowpoly', 'carbon', 'camo', 'marble', 'damascus', 'lava'];
 const PALS: [string, string, string][] = [['#7c4dff', '#18ffff', '#ff4081'], ['#ff1744', '#ffd600', '#ff6d00'], ['#00e676', '#1de9b6', '#ffea00'], ['#2962ff', '#e040fb', '#00e5ff']];
 
 export function DevSkins() {

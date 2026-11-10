@@ -149,7 +149,7 @@ export function buildCase(t: ThemeDef): CaseDef {
     } else {
       models = pickN(rng, WEAPONS, n);
       // до армейского — часть предметов наклейки (разнообразие, как в настоящих кейсах)
-      if (tier <= 3) models = models.map((m, j) => (j === 0 || (j === 1 && rng() < 0.4) ? STICKER : m));
+      if (tier <= 2) models = models.map((m, j) => (j === 0 && rng() < 0.5 ? STICKER : m));
       // брелоки — среди армейских и запрещённых
       if (tier === 2 || tier === 3) models = models.map((m, j) => (j === n - 1 && rng() < 0.6 ? CHARM : m));
     }

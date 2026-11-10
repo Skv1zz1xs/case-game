@@ -43,11 +43,11 @@ export const FINISH_KIND: Record<string, number> = {
   anodized: 1, fade: 0.95, galaxy: 0.9, hologram: 1, damascus: 1, marble: 0.6, lava: 0.5, circuit: 0.7,
   carbon: 0.6, graphic: 0.5, flames: 0.55, retrowave: 0.55, beast: 0.5, splatter: 0.45, acid: 0.55, lowpoly: 0.6,
   neongrid: 0.6, ornament: 0.8, halftone: 0.4, tiger: 0.3, stripes: 0.35, camo: 0.1, digital: 0.15, solid: 0.4,
-  topo: 0.3, crystal: 1, kintsugi: 0.7, scales: 0.85, honeycomb: 0.6, swirl: 0.75, splinter: 0.15,
+  photo: 0.2, photocamo: 0.1, topo: 0.3, crystal: 1, kintsugi: 0.7, scales: 0.85, honeycomb: 0.6, swirl: 0.75, splinter: 0.15,
 };
 
 // Повторяющиеся узоры красятся на каждой детали отдельно (со сдвигом), сюжетные — цельно
-export const PER_PART = new Set(['camo', 'digital', 'carbon', 'damascus', 'honeycomb', 'scales', 'splinter', 'stripes', 'tiger', 'topo', 'ornament', 'halftone', 'circuit', 'neongrid']);
+export const PER_PART = new Set(['photo', 'photocamo', 'camo', 'digital', 'carbon', 'damascus', 'honeycomb', 'scales', 'splinter', 'stripes', 'tiger', 'topo', 'ornament', 'halftone', 'circuit', 'neongrid']);
 
 // Попиксельные стили (на шуме)
 function pixelStyle(style: string, f: Finish, W: number, H: number, rng: Rng): ImageData {
@@ -434,11 +434,49 @@ function grainTile() {
 }
 
 // Финальная текстура: стиль + общая фактура (зерно, лёгкая виньетка)
-export function paintSkin(f: Finish, W: number, H: number, word = '', tier = 0): HTMLCanvasElement {
+// ——— Фото-фактуры (Poly Haven, CC0): реалистичные скины низких редкостей ———
+export const PHOTO_TEX = ["american_walnut_veneer", "black_walnut_veneer_02", "cherry_veneer", "ash_veneer", "marble_01", "grey_cartago_01", "terrazzo_tiles", "denim_fabric", "crepe_satin", "curly_teddy_checkered", "brown_leather", "leather_white", "green_metal_rust", "rust_coarse_01", "blue_metal_plate", "painted_metal_shutter", "aerial_beach_01", "aerial_rocks_02", "aerial_grass_rock", "bark_platanus", "japanese_sycamore", "moon_01", "snow_02", "cracked_red_ground", "coral_fort_wall_01", "granite_tile_03"];
+const photoCache = new Map<string, Promise<HTMLImageElement>>();
+export function loadPhoto(name: string): Promise<HTMLImageElement> {
+  let p = photoCache.get(name);
+  if (!p) {
+    const img = new Image();
+    img.src = ((import.meta as any).env?.BASE_URL ?? './') + 'tex/skin/' + name + '.webp';
+    p = img.decode().then(() => img);
+    photoCache.set(name, p);
+  }
+  return p;
+}
+export const photoFor = (f: Finish, k = 0) => PHOTO_TEX[(f.seed + k * 7) % PHOTO_TEX.length];
+
+// Фото-скин: фактура с тонировкой в цвет палитры; photocamo — две фактуры через рваную маску
+function photoStyle(g: CanvasRenderingContext2D, W: number, H: number, f: Finish, imgs: HTMLImageElement[]) {
+  const tile = (img: HTMLImageElement, sc: number) => { const pat = g.createPattern(img, 'repeat')!; pat.setTransform(new DOMMatrix().scale(sc)); return pat; };
+  g.fillStyle = tile(imgs[0], W / 1400); g.fillRect(0, 0, W, H);
+  // тонировка: мягкий свет цветом палитры (сохраняет фактуру)
+  g.save(); g.globalCompositeOperation = 'color'; g.globalAlpha = f.style === 'photo' ? 0.1 : 0.2; g.fillStyle = f.colors[0]; g.fillRect(0, 0, W, H); g.restore();
+  if (f.style === 'photocamo' && imgs[1]) {
+    const m = document.createElement('canvas'); m.width = W; m.height = H;
+    const mg = m.getContext('2d')!;
+    const { fbm } = makeNoise(f.seed + 3);
+    const id = mg.createImageData(W, H);
+    for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) {
+      const v = fbm(x / W * 4, y / W * 4, 5) > 0.04 ? 255 : 0;
+      for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { const i = ((y + dy) * W + x + dx) * 4; id.data[i + 3] = v; }
+    }
+    mg.putImageData(id, 0, 0);
+    mg.globalCompositeOperation = 'source-in'; mg.fillStyle = tile(imgs[1], W / 700); mg.fillRect(0, 0, W, H);
+    mg.globalCompositeOperation = 'color'; mg.globalAlpha = 0.25; mg.fillStyle = f.colors[1]; mg.fillRect(0, 0, W, H);
+    g.drawImage(m, 0, 0);
+  }
+}
+
+export function paintSkin(f: Finish, W: number, H: number, word = '', tier = 0, photos: HTMLImageElement[] = []): HTMLCanvasElement {
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d')!;
   const r = mulberry32(f.seed ^ 0x5bd1e995);
-  if (PIXEL.has(f.style)) g.putImageData(pixelStyle(f.style, f, W, H, r), 0, 0);
+  if ((f.style === 'photo' || f.style === 'photocamo') && photos.length) photoStyle(g, W, H, f, photos);
+  else if (PIXEL.has(f.style)) g.putImageData(pixelStyle(f.style, f, W, H, r), 0, 0);
   else vectorStyle(f.style, f, g, W, H, r);
   // зерно краски: готовая плитка шума поверх (быстро, без расчёта по каждому пикселю)
   g.save(); g.globalCompositeOperation = 'overlay'; g.globalAlpha = 0.35;

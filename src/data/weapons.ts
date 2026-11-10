@@ -56,13 +56,13 @@ export const KIND_NAMES: Record<WeaponKind, string> = {
 // Узоры покраски (рисуются в ui/components/ItemArt.tsx)
 export type PatternStyle =
   | 'solid' | 'fade' | 'camo' | 'damascus' | 'carbon' | 'acid' | 'hologram'
-  | 'marble' | 'tiger' | 'digital' | 'stripes' | 'galaxy' | 'lava' | 'circuit' | 'anodized' | 'graphic' | 'flames' | 'retrowave' | 'lowpoly' | 'splatter' | 'beast' | 'halftone' | 'neongrid' | 'ornament' | 'topo' | 'kintsugi' | 'scales' | 'honeycomb' | 'swirl' | 'splinter' | 'crystal';
+  | 'marble' | 'tiger' | 'digital' | 'stripes' | 'galaxy' | 'lava' | 'circuit' | 'anodized' | 'graphic' | 'flames' | 'retrowave' | 'lowpoly' | 'splatter' | 'beast' | 'halftone' | 'neongrid' | 'ornament' | 'topo' | 'kintsugi' | 'scales' | 'honeycomb' | 'swirl' | 'splinter' | 'crystal' | 'photo' | 'photocamo';
 
 // Чем выше редкость, тем «дороже» выглядит узор
 export const PATTERNS_BY_TIER: PatternStyle[][] = [
-  ['camo', 'digital', 'stripes', 'halftone', 'splinter', 'topo'],                // ширпотреб
-  ['camo', 'splinter', 'carbon', 'fade', 'lowpoly', 'ornament', 'topo'],         // промышленное
-  ['anodized', 'fade', 'tiger', 'honeycomb', 'neongrid', 'splatter', 'swirl'],  // армейское
+  ['photo', 'photocamo', 'photo', 'photocamo', 'camo', 'digital', 'splinter'],  // ширпотреб: реалистичные фото-фактуры
+  ['photo', 'photocamo', 'carbon', 'fade', 'splinter', 'topo', 'photocamo'],   // промышленное
+  ['anodized', 'fade', 'tiger', 'honeycomb', 'photocamo', 'splatter', 'swirl'], // армейское
   ['graphic', 'flames', 'retrowave', 'scales', 'swirl', 'damascus', 'honeycomb'], // запрещённое
   ['beast', 'graphic', 'retrowave', 'flames', 'kintsugi', 'lava', 'scales'],     // засекреченное
   ['beast', 'hologram', 'galaxy', 'kintsugi', 'retrowave', 'lava', 'swirl'],     // тайное

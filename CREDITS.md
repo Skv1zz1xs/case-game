@@ -30,3 +30,4 @@ metal_plate, marble_01, brown_leather, american_walnut_veneer, green_metal_rust.
 
 ## Фон
 Фото-фон страницы кейса и общий размытый фон — кадр из HDRI-панорамы «Urban Street 04» с Poly Haven (CC0), отрендерен в Blender.
+Фото-фактуры скинов (public/tex/skin) — Poly Haven, CC0.
